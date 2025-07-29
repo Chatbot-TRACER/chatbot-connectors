@@ -26,8 +26,7 @@ class MillionBotResponseProcessor(ResponseProcessor):
                 if isinstance(item, dict):
                     text_response += self._process_single_response(item)
             return text_response
-        else:
-            return self._process_single_response(response_json)
+        return self._process_single_response(response_json)
 
     def _process_single_response(self, response_json: dict[str, Any]) -> str:
         """Process a single response JSON object."""
@@ -42,9 +41,7 @@ class MillionBotResponseProcessor(ResponseProcessor):
                         if "buttons" in card:
                             text_response += self._translate_buttons(card["buttons"])
                 elif "buttons" in answer["payload"]:
-                    text_response += self._translate_buttons(
-                        answer["payload"]["buttons"]
-                    )
+                    text_response += self._translate_buttons(answer["payload"]["buttons"])
         return text_response
 
     def _translate_buttons(self, buttons_list: list[dict[str, Any]]) -> str:
@@ -148,9 +145,7 @@ class MillionBot(Chatbot):
     def get_endpoints(self) -> dict[str, EndpointConfig]:
         """Return endpoint configurations for MillionBot chatbot."""
         return {
-            "send_message": EndpointConfig(
-                path="/messages", method=RequestMethod.POST, timeout=self.config.timeout
-            )
+            "send_message": EndpointConfig(path="/messages", method=RequestMethod.POST, timeout=self.config.timeout)
         }
 
     def get_response_processor(self) -> ResponseProcessor:
@@ -159,7 +154,7 @@ class MillionBot(Chatbot):
 
     def prepare_message_payload(self, user_msg: str) -> Payload:
         """Prepare the payload for sending a message to MillionBot."""
-        payload = {
+        return {
             "conversation": self.conversation_id,
             "sender_type": "User",
             "sender": self.user_id,
@@ -167,7 +162,6 @@ class MillionBot(Chatbot):
             "language": "es",
             "message": {"text": user_msg},
         }
-        return payload
 
     def _requires_conversation_id(self) -> bool:
         return True
@@ -176,6 +170,7 @@ class MillionBot(Chatbot):
         """Create a new conversation for MillionBot."""
         try:
             self._initialize_conversation()
-            return True
-        except Exception:
+        except (ConnectionError, TimeoutError, ValueError, KeyError):
             return False
+        else:
+            return True

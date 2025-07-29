@@ -9,12 +9,12 @@ from urllib.parse import urljoin
 
 import requests
 
-from chatbot_connectors.logging_utils import get_logger
 from chatbot_connectors.exceptions import (
     ConnectorAuthenticationError,
     ConnectorConnectionError,
     ConnectorResponseError,
 )
+from chatbot_connectors.logging_utils import get_logger
 
 logger = get_logger()
 

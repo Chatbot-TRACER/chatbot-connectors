@@ -198,8 +198,11 @@ wheels = [
 
 [[package]]
 name = "chatbot-connectors"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "pre-commit", version = "3.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "pre-commit", version = "4.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
     { name = "requests" },
 ]
 
@@ -224,6 +227,7 @@ requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = ">=21.0.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.0.0" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=0.800" },
+    { name = "pre-commit", specifier = ">=3.5.0" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=2.0.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=2.10.0" },

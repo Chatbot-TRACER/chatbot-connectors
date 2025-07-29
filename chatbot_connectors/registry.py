@@ -8,24 +8,11 @@ from chatbot_connectors.implementations.taskyto import ChatbotTaskyto
 
 def register_all_chatbots() -> None:
     """Register all available chatbot implementations with the factory."""
-    
-    ChatbotFactory.register_chatbot(
-        "rasa",
-        RasaChatbot,
-        description="RASA chatbot connector using REST webhook"
-    )
-    
-    ChatbotFactory.register_chatbot(
-        "millionbot", 
-        MillionBot,
-        description="MillionBot chatbot connector"
-    )
-    
-    ChatbotFactory.register_chatbot(
-        "taskyto",
-        ChatbotTaskyto, 
-        description="Taskyto chatbot connector"
-    )
+    ChatbotFactory.register_chatbot("rasa", RasaChatbot, description="RASA chatbot connector using REST webhook")
+
+    ChatbotFactory.register_chatbot("millionbot", MillionBot, description="MillionBot chatbot connector")
+
+    ChatbotFactory.register_chatbot("taskyto", ChatbotTaskyto, description="Taskyto chatbot connector")
 
 
 # Auto-register when module is imported

@@ -38,6 +38,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
+    "pre-commit>=3.5.0",
     "requests>=2.25.0",
 ]
 
@@ -60,43 +61,60 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["chatbot_connectors"]
 
-[tool.black]
+[tool.ruff]
+# default is too small
 line-length = 120
-target-version = ['py38']
+target-version = "py311"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 120
+[tool.ruff.lint]
+# E: pycode style (error)
+# W: pycode style (warning)
+# F: Pyflakes
+# I: ishort
+# ANN: type annotations
+# D: docstrings
+# B: bugbear
+select = [
+    "ALL"
+]
+ignore = [
+    "E501", # line too long
+    # "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", # Common missing docstring rules
+    "COM812", # Creates incompatibility with formatter
+    "T201", # Doesnt let you use prints
+]
 
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
-[tool.coverage.run]
-source = ["chatbot_connectors"]
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
 
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "ruff>=0.11.13",
 ]

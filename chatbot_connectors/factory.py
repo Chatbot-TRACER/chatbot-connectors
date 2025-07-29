@@ -73,7 +73,7 @@ class ChatbotFactory:
         }
 
     @classmethod
-    def create_chatbot(cls, chatbot_type: str, **kwargs: Any) -> Chatbot:
+    def create_chatbot(cls, chatbot_type: str, **kwargs: str | int | bool | None) -> Chatbot:
         """Create a chatbot instance using registered factory method.
 
         Args:
@@ -122,11 +122,7 @@ class ChatbotFactory:
         """Validate provided arguments against the chatbot's required parameters."""
         required_params = cls.get_chatbot_parameters(chatbot_type)
 
-        missing_params = [
-            param.name
-            for param in required_params
-            if param.required and param.name not in provided_args
-        ]
+        missing_params = [param.name for param in required_params if param.required and param.name not in provided_args]
 
         if missing_params:
             error_msg = f"Missing required parameters for '{chatbot_type}': {', '.join(missing_params)}"

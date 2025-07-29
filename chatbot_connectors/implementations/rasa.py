@@ -30,10 +30,7 @@ class RasaResponseProcessor(ResponseProcessor):
         Returns:
             Concatenated text from all response messages
         """
-        if isinstance(response_json, list):
-            messages = response_json
-        else:
-            messages = response_json.get("messages", [])
+        messages = response_json if isinstance(response_json, list) else response_json.get("messages", [])
 
         if not isinstance(messages, list):
             return ""
@@ -43,29 +40,36 @@ class RasaResponseProcessor(ResponseProcessor):
             if not isinstance(message, dict):
                 continue
 
-            # Extract text content
-            text = message.get("text")
-            if isinstance(text, str):
-                text_parts.append(text)
-
-            # Handle buttons/quick replies
-            buttons = message.get("buttons")
-            if isinstance(buttons, list):
-                button_texts: list[str] = []
-                for btn in buttons:
-                    if isinstance(btn, dict):
-                        title = btn.get("title") or btn.get("payload") or ""
-                        if isinstance(title, str):
-                            button_texts.append(title)
-                if button_texts:
-                    text_parts.append(f"Options: {', '.join(button_texts)}")
-
-            # Handle custom responses
-            custom = message.get("custom")
-            if custom is not None:
-                text_parts.append(str(custom))
+            self._extract_text_content(message, text_parts)
+            self._extract_button_content(message, text_parts)
+            self._extract_custom_content(message, text_parts)
 
         return "\n".join(text_parts) if text_parts else ""
+
+    def _extract_text_content(self, message: dict[str, Any], text_parts: list[str]) -> None:
+        """Extract text content from a message."""
+        text = message.get("text")
+        if isinstance(text, str):
+            text_parts.append(text)
+
+    def _extract_button_content(self, message: dict[str, Any], text_parts: list[str]) -> None:
+        """Extract button content from a message."""
+        buttons = message.get("buttons")
+        if isinstance(buttons, list):
+            button_texts: list[str] = []
+            for btn in buttons:
+                if isinstance(btn, dict):
+                    title = btn.get("title") or btn.get("payload") or ""
+                    if isinstance(title, str):
+                        button_texts.append(title)
+            if button_texts:
+                text_parts.append(f"Options: {', '.join(button_texts)}")
+
+    def _extract_custom_content(self, message: dict[str, Any], text_parts: list[str]) -> None:
+        """Extract custom content from a message."""
+        custom = message.get("custom")
+        if custom is not None:
+            text_parts.append(str(custom))
 
 
 @dataclass
@@ -83,9 +87,7 @@ class RasaConfig(ChatbotConfig):
 class RasaChatbot(Chatbot):
     """Connector for RASA chatbot using REST webhook."""
 
-    def __init__(
-        self, base_url: str, sender_id: str = "user", timeout: int = 20
-    ) -> None:
+    def __init__(self, base_url: str, sender_id: str = "user", timeout: int = 20) -> None:
         """Initialize the RASA chatbot connector.
 
         Args:
