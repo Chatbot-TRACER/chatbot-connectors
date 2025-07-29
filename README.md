@@ -1,6 +1,6 @@
 # Chatbot Connectors
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
 ![PyPI](https://img.shields.io/pypi/v/chatbot-connectors)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
