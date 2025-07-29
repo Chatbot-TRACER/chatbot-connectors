@@ -39,6 +39,7 @@ classifiers = [
 ]
 dependencies = [
     "pre-commit>=3.5.0",
+    "pyyaml>=6.0.2",
     "requests>=2.25.0",
 ]
 
