@@ -15,3 +15,13 @@ What this one does is read a YAML file with the info and try to work that way.
 To see how to build these YAML files and use them see
 [CUSTOM CONNECTOR GUIDE](docs/CUSTOM_CONNECTOR_GUIDE.md),
 there are also examples in the `yaml-examples` directory.
+
+If you want to directly try one, execute this in a Python shell:
+
+```python
+from chatbot_connectors.implementations.custom import CustomChatbot
+
+bot = CustomChatbot("yaml-examples/ada-uam.yml")
+success, response = bot.execute_with_input("Hola, necesito ayuda con Moodle")
+print(response)
+```
