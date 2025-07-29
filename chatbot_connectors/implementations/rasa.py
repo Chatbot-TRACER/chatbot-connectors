@@ -30,13 +30,11 @@ class RasaResponseProcessor(ResponseProcessor):
         Returns:
             Concatenated text from all response messages
         """
-        # RASA typically returns a list directly, not a dict containing a list
         if isinstance(response_json, list):
             messages = response_json
         else:
-            # If it's a dict, maybe it contains a 'messages' field or similar
-            messages = response_json.get('messages', [])
-            
+            messages = response_json.get("messages", [])
+
         if not isinstance(messages, list):
             return ""
 
@@ -44,7 +42,7 @@ class RasaResponseProcessor(ResponseProcessor):
         for message in messages:
             if not isinstance(message, dict):
                 continue
-                
+
             # Extract text content
             text = message.get("text")
             if isinstance(text, str):
@@ -85,7 +83,9 @@ class RasaConfig(ChatbotConfig):
 class RasaChatbot(Chatbot):
     """Connector for RASA chatbot using REST webhook."""
 
-    def __init__(self, base_url: str, sender_id: str = "user", timeout: int = 20) -> None:
+    def __init__(
+        self, base_url: str, sender_id: str = "user", timeout: int = 20
+    ) -> None:
         """Initialize the RASA chatbot connector.
 
         Args:
@@ -117,11 +117,12 @@ class RasaChatbot(Chatbot):
         ]
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
-
         """Return endpoint configurations for RASA chatbot."""
         return {
             "send_message": EndpointConfig(
-                path=self.rasa_config.webhook_path, method=RequestMethod.POST, timeout=self.config.timeout
+                path=self.rasa_config.webhook_path,
+                method=RequestMethod.POST,
+                timeout=self.config.timeout,
             )
         }
 

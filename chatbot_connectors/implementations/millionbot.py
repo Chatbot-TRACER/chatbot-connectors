@@ -16,6 +16,7 @@ from chatbot_connectors.core import (
 
 class MillionBotResponseProcessor(ResponseProcessor):
     """Response processor for MillionBot chatbot."""
+
     def process(self, response_json: dict[str, Any] | list[dict[str, Any]]) -> str:
         """Process the MillionBot response JSON and extract messages."""
         if isinstance(response_json, list):
@@ -72,7 +73,9 @@ class MillionBot(Chatbot):
     def __init__(self, bot_id: str, timeout: int = 20) -> None:
         """Initialize the MillionBot chatbot connector."""
         config = MillionBotConfig(
-            base_url="https://api.1millionbot.com/api/public/", bot_id=bot_id, timeout=timeout
+            base_url="https://api.1millionbot.com/api/public/",
+            bot_id=bot_id,
+            timeout=timeout,
         )
         super().__init__(config)
         self.millionbot_config = config
@@ -92,7 +95,7 @@ class MillionBot(Chatbot):
 
     def _initialize_conversation(self) -> None:
         """Initialize the conversation with the MillionBot API."""
-        # Step 1: Create user - using minimal required fields based on API example
+        # Step 1: Create user
         user_payload = {
             "bot": self.millionbot_config.bot_id,
             "language": "es-ES",
@@ -100,7 +103,7 @@ class MillionBot(Chatbot):
             "country": "Spain",
             "countryData": {"isoCode": "ES", "name": "Spain"},
             "timezone": "Europe/Madrid",
-            "ip": "127.0.0.1"  # Using localhost IP as default
+            "ip": "127.0.0.1",
         }
         user_headers = {
             "Content-Type": "application/json",
@@ -108,7 +111,10 @@ class MillionBot(Chatbot):
         }
         user_url = self.config.get_full_url("users")
         user_response = self.session.post(
-            user_url, headers=user_headers, json=user_payload, timeout=self.config.timeout
+            user_url,
+            headers=user_headers,
+            json=user_payload,
+            timeout=self.config.timeout,
         )
         user_response.raise_for_status()
         user_data = user_response.json()
@@ -120,7 +126,7 @@ class MillionBot(Chatbot):
             "user": user_id,
             "language": "es",
             "integration": "web",
-            "gdpr": True
+            "gdpr": True,
         }
         conversation_headers = {
             "Content-Type": "application/json",

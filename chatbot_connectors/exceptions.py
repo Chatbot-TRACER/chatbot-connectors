@@ -33,8 +33,6 @@ class ConnectorError(Exception):
                 attached as attributes to the exception instance for later
                 inspection.
         """
-        # Save all provided keyword arguments as attributes (e.g. url,
-        # connector_type, status_code, original_error, response_text, ...).
         for key, value in kwargs.items():
             setattr(self, key, value)
 
