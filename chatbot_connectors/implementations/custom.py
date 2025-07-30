@@ -77,8 +77,22 @@ class CustomConfig(ChatbotConfig):
     @classmethod
     def from_yaml(cls, file_path: str) -> "CustomConfig":
         """Load configuration from a YAML file."""
-        with Path(file_path).open() as f:
-            config_data = yaml.safe_load(f)
+        try:
+            with Path(file_path).open() as f:
+                config_data = yaml.safe_load(f)
+        except FileNotFoundError as e:
+            msg = f"Configuration file not found: {file_path}"
+            raise FileNotFoundError(msg) from e
+        except yaml.YAMLError as e:
+            msg = f"Invalid YAML format in configuration file: {file_path}"
+            raise yaml.YAMLError(msg) from e
+        except Exception as e:
+            msg = f"Error reading configuration file: {file_path}"
+            raise OSError(msg) from e
+
+        if not isinstance(config_data, dict):
+            msg = f"Configuration file must contain a YAML dictionary: {file_path}"
+            raise TypeError(msg)
 
         send_message_data = config_data.get("send_message", {})
         send_message_config = CustomEndpointConfig(
@@ -158,11 +172,7 @@ class CustomChatbot(Chatbot):
                 return obj.replace("{user_msg}", user_msg)
             return obj
 
-        replaced = replace_user_msg(self.custom_config.send_message.payload_template)
-        if not isinstance(replaced, dict):
-            msg = "Payload template must be a dictionary."
-            raise TypeError(msg)
-        return replaced
+        return replace_user_msg(self.custom_config.send_message.payload_template)
 
     def _requires_conversation_id(self) -> bool:
         """Custom chatbot conversation tracking depends on the implementation."""
