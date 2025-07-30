@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chatbot-connectors"
-version = "0.2.1"
+version = "0.2.2"
 description = "A unified Python library for connecting to various chatbot APIs (RASA, MillionBot, Taskyto)"
 readme = "README.md"
 license = {text = "MIT"}
@@ -16,11 +16,6 @@ keywords = [
     "chatbot",
     "connectors",
     "api",
-    "rasa",
-    "millionbot",
-    "taskyto",
-    "conversational-ai",
-    "nlp",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -38,7 +33,6 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "pre-commit>=3.5.0",
     "pyyaml>=6.0.2",
     "requests>=2.25.0",
 ]
@@ -48,16 +42,6 @@ Homepage = "https://github.com/Chatbot-TRACER/chatbot-connectors"
 Documentation = "https://github.com/Chatbot-TRACER/chatbot-connectors#readme"
 Repository = "https://github.com/Chatbot-TRACER/chatbot-connectors"
 "Bug Tracker" = "https://github.com/Chatbot-TRACER/chatbot-connectors/issues"
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=6.0.0",
-    "pytest-cov>=2.10.0",
-    "black>=21.0.0",
-    "isort>=5.0.0",
-    "mypy>=0.800",
-    "pre-commit>=2.0.0",
-]
 
 [tool.hatch.build.targets.wheel]
 packages = ["chatbot_connectors"]
