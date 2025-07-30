@@ -133,7 +133,7 @@ class CustomChatbot(Chatbot):
                 name="config_path",
                 type="string",
                 required=True,
-                description="The path to the YAML configuration file.",
+                description="The path to the YAML configuration file. For more info, see: https://github.com/Chatbot-TRACER/chatbot-connectors/blob/main/docs/CUSTOM_CONNECTOR_GUIDE.md",
             )
         ]
 
