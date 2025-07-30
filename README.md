@@ -6,6 +6,12 @@
 
 A Python library for connecting to various chatbot APIs with a unified interface.
 
+## Installation
+
+```bash
+pip install chatbot-connectors
+```
+
 ## Custom YAML Connector
 
 If there is no connector for your chatbot and you are not willing to code one,
