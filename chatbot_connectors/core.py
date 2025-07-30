@@ -4,7 +4,7 @@ import json
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, TypeAlias
 from urllib.parse import urljoin
 
 import requests
@@ -22,6 +22,7 @@ logger = get_logger()
 ChatbotResponse = tuple[bool, str | None]
 Headers = dict[str, str]
 Payload = dict[str, Any]
+JsonSerializable: TypeAlias = dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
 
 
 @dataclass

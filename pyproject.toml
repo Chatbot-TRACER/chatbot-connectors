@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chatbot-connectors"
-version = "0.1.0"
+version = "0.2.0"
 description = "A unified Python library for connecting to various chatbot APIs (RASA, MillionBot, Taskyto)"
 readme = "README.md"
 license = {text = "MIT"}
@@ -39,6 +39,7 @@ classifiers = [
 ]
 dependencies = [
     "pre-commit>=3.5.0",
+    "pyyaml>=6.0.2",
     "requests>=2.25.0",
 ]
 
