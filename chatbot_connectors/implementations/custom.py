@@ -31,12 +31,21 @@ class CustomResponseProcessor(ResponseProcessor):
 
     def process(self, response_json: dict[str, Any] | list[dict[str, Any]]) -> str:
         """Process the Custom response JSON and extract messages."""
+        if not self.response_path:
+            return ""
+
         try:
             value = response_json
             for key in self.response_path.split("."):
-                value = value[int(key)] if isinstance(value, list) else value[key]
+                if isinstance(value, list):
+                    if key.isdigit():
+                        value = value[int(key)]
+                    else:
+                        return ""  # Invalid key for list indexing
+                else:
+                    value = value[key]
             return str(value)
-        except (KeyError, IndexError, TypeError):
+        except (KeyError, IndexError, TypeError, ValueError):
             return ""
 
 
