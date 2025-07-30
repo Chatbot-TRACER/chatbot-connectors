@@ -25,7 +25,13 @@ class CustomResponseProcessor(ResponseProcessor):
         """Initialize the CustomResponseProcessor.
 
         Args:
-            response_path: The path to extract from the response JSON.
+            response_path: Dot-separated path to extract from the response JSON.
+
+        Examples:
+            - "message" -> response["message"]
+            - "data.text" -> response["data"]["text"]
+            - "messages.0.content" -> response["messages"][0]["content"]
+            - "results.-1.value" -> response["results"][-1]["value"]
         """
         self.response_path = response_path
 
@@ -38,9 +44,10 @@ class CustomResponseProcessor(ResponseProcessor):
             value = response_json
             for key in self.response_path.split("."):
                 if isinstance(value, list):
-                    if key.isdigit():
-                        value = value[int(key)]
-                    else:
+                    try:
+                        index = int(key)
+                        value = value[index]
+                    except (ValueError, IndexError):
                         return ""  # Invalid key for list indexing
                 else:
                     value = value[key]
