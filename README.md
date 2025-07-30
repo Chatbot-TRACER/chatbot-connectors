@@ -1,8 +1,8 @@
 # Chatbot Connectors
 
-![Python](https://img.shields.io/badge/python-3.9+-blue.svg)
-![PyPI](https://img.shields.io/pypi/v/chatbot-connectors)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+[![CI](https://github.com/Chatbot-TRACER/chatbot-connectors/actions/workflows/CI.yml/badge.svg)](https://github.com/Chatbot-TRACER/chatbot-connectors/actions/workflows/CI.yml)
+[![PyPI](https://img.shields.io/pypi/v/chatbot-connectors)](https://pypi.org/project/chatbot-connectors/)
+[![License](https://img.shields.io/github/license/Chatbot-TRACER/chatbot-connectors)](https://github.com/Chatbot-TRACER/chatbot-connectors/blob/main/LICENSE)
 
 A Python library for connecting to various chatbot APIs with a unified interface.
 
