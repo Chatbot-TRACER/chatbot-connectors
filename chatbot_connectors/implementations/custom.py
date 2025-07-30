@@ -1,6 +1,5 @@
 """Custom chatbot implementation."""
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -11,6 +10,7 @@ from chatbot_connectors.core import (
     Chatbot,
     ChatbotConfig,
     EndpointConfig,
+    JsonSerializable,
     Parameter,
     Payload,
     RequestMethod,
@@ -56,7 +56,7 @@ class CustomEndpointConfig:
     path: str
     method: RequestMethod = RequestMethod.POST
     headers: dict[str, str] = field(default_factory=dict)
-    payload_template: dict[str, Any] = field(default_factory=dict)
+    payload_template: dict[str, JsonSerializable] = field(default_factory=dict)
 
 
 @dataclass
@@ -140,9 +140,22 @@ class CustomChatbot(Chatbot):
         Returns:
             Payload dictionary for the API request
         """
-        payload_str = json.dumps(self.custom_config.send_message.payload_template)
-        payload_str = payload_str.replace("{user_msg}", user_msg)
-        return json.loads(payload_str)
+
+        def replace_user_msg(obj: JsonSerializable) -> JsonSerializable:
+            """Recursively replace {user_msg} placeholders in the payload template."""
+            if isinstance(obj, dict):
+                return {key: replace_user_msg(value) for key, value in obj.items()}
+            if isinstance(obj, list):
+                return [replace_user_msg(item) for item in obj]
+            if isinstance(obj, str):
+                return obj.replace("{user_msg}", user_msg)
+            return obj
+
+        replaced = replace_user_msg(self.custom_config.send_message.payload_template)
+        if not isinstance(replaced, dict):
+            msg = "Payload template must be a dictionary."
+            raise TypeError(msg)
+        return replaced
 
     def _requires_conversation_id(self) -> bool:
         """Custom chatbot conversation tracking depends on the implementation."""

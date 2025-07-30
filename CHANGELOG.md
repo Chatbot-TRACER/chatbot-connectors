@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release of chatbot-connectors library
 - Support for RASA chatbot connector
-- Support for MillionBot chatbot connector  
+- Support for MillionBot chatbot connector
 - Support for Taskyto chatbot connector
 
 ### Features
