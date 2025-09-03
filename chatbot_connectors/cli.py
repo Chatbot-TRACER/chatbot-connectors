@@ -136,13 +136,14 @@ def parse_connector_params(connector_params_str: str | None) -> dict[str, Any]:
                     # Try to convert to appropriate types
                     if value.lower() in ("true", "false"):
                         params[key] = value.lower() == "true"
-                    elif value.isdigit():
-                        params[key] = int(value)
                     else:
                         try:
-                            params[key] = float(value)
+                            params[key] = int(value)
                         except ValueError:
-                            params[key] = value
+                            try:
+                                params[key] = float(value)
+                            except ValueError:
+                                params[key] = value
 
         except (json.JSONDecodeError, ValueError) as e:
             logger.exception("Failed to parse connector parameters: %s", connector_params_str)
