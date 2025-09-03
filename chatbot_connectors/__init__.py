@@ -5,6 +5,11 @@ A library for connecting to various chatbot APIs.
 
 # Import registry to auto-register chatbots
 from chatbot_connectors import registry
+from chatbot_connectors.cli import (
+    handle_list_connector_params,
+    handle_list_connectors,
+    parse_connector_params,
+)
 from chatbot_connectors.core import (
     Chatbot,
     ChatbotConfig,
@@ -41,5 +46,8 @@ __all__ = [
     "RequestMethod",
     "ResponseProcessor",
     "SimpleTextProcessor",
+    "handle_list_connector_params",
+    "handle_list_connectors",
+    "parse_connector_params",
     "registry",
 ]
