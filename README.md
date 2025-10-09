@@ -43,7 +43,7 @@ The library ships with several ready-to-use connectors. Each connector exposes t
   ```python
   from chatbot_connectors.implementations.botlovers import BotloversChatbot
 
-  bot = BotloversChatbot(base_url="https://arthur.botslovers.com/", lang="en")
+  bot = BotloversChatbot(base_url="https://arthur.botslovers.com/")
   success, reply = bot.execute_with_input("Hi Arthur!")
   print(reply)
   ```
