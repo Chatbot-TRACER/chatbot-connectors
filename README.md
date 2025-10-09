@@ -31,3 +31,48 @@ bot = CustomChatbot("yaml-examples/ada-uam.yml")
 success, response = bot.execute_with_input("Hola, necesito ayuda con Moodle")
 print(response)
 ```
+
+## Built-in Connectors
+
+The library ships with several ready-to-use connectors. Each connector exposes the parameters listed via `--list-connector-params` in the CLI or `get_chatbot_parameters()` in code.
+
+### Botlovers
+
+- Base URL examples: `https://arthur.botslovers.com/`, `https://alcampo.botslovers.com/`
+- Minimal Python usage:
+  ```python
+  from chatbot_connectors.implementations.botlovers import BotloversChatbot
+
+  bot = BotloversChatbot(base_url="https://arthur.botslovers.com/", lang="en")
+  success, reply = bot.execute_with_input("Hi Arthur!")
+  print(reply)
+  ```
+
+### MillionBot
+
+- Requires a `bot_id`. Known deployments:
+  - ADA UAM: `60a3be81f9a6b98f7659a6f9`
+  - SAIC Malaga: `64e5d1af081211d24e2cfec8`
+  - Madrid te cuida: `612cc0d871562c07747d3f0a`
+  - Genion: `65157185ba7cc62753c7d3e2`
+  - Gallo de Morón de la Frontera: `65ca19e7dbbb4e26cbeadf24`
+  - Ayto. de Arucas: `660d8b37876b1f546abde807`
+  - Gestri Diputación Valencia: `6141bc1e161c3d4e06ced69c`
+- Quick example:
+  ```python
+  from chatbot_connectors.implementations.millionbot import MillionBot
+
+  bot = MillionBot(bot_id="60a3be81f9a6b98f7659a6f9")
+  success, reply = bot.execute_with_input("Hola, ¿puedes ayudarme?")
+  print(reply)
+  ```
+
+### RASA
+
+- Use the public REST webhook, e.g. `base_url="http://localhost:5005"`.
+- Optional `sender_id` controls conversation tracking.
+
+### Taskyto
+
+- Requires the Taskyto server base URL and optional port (defaults to `5000`).
+- Example: `ChatbotTaskyto(base_url="http://localhost", port=8080)`
