@@ -46,16 +46,29 @@ class BotloversResponseProcessor(ResponseProcessor):
             return collected
 
         for group in messages:
+            if isinstance(group, dict):
+                self._append_message_content(group, collected)
+                continue
+
             if not isinstance(group, list):
                 continue
+
             for item in group:
                 if not isinstance(item, dict):
                     continue
-                text = self._extract_text_from_message(item)
-                if text:
-                    collected.append(text)
+                self._append_message_content(item, collected)
 
         return collected
+
+    def _append_message_content(self, item: dict[str, Any], collector: list[str]) -> None:
+        """Append message text and quick replies to the collector."""
+        text = self._extract_text_from_message(item)
+        if text:
+            collector.append(text)
+
+        quick_replies = self._extract_quick_replies(item)
+        if quick_replies:
+            collector.append(quick_replies)
 
     def _extract_fallback_text(self, response_json: dict[str, Any]) -> str:
         """Extract fallback answer from response_gpt if available."""
@@ -72,6 +85,29 @@ class BotloversResponseProcessor(ResponseProcessor):
             return answer
 
         return ""
+
+    def _extract_quick_replies(self, item: dict[str, Any]) -> str:
+        """Extract quick replies from the message if present."""
+        message = item.get("message")
+        if not isinstance(message, dict):
+            return ""
+
+        quick_replies = message.get("quick_replies")
+        if not isinstance(quick_replies, list):
+            return ""
+
+        titles: list[str] = []
+        for reply in quick_replies:
+            if not isinstance(reply, dict):
+                continue
+            title = reply.get("title") or reply.get("payload")
+            if isinstance(title, str):
+                titles.append(title)
+
+        if not titles:
+            return ""
+
+        return f"Options: {', '.join(titles)}"
 
     def _extract_text_from_message(self, item: dict[str, Any]) -> str:
         """Extract the text field handling the nested payload format."""
