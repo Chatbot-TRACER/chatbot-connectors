@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import unicodedata
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 from chatbot_connectors.core import (
     Chatbot,
@@ -33,57 +35,96 @@ class MetroMadridResponseProcessor(ResponseProcessor):
 
     def process(self, response_json: dict[str, Any] | list[dict[str, Any]]) -> str:
         """Extract textual replies and summarize available buttons."""
-        if not isinstance(response_json, dict):
-            return ""
-
-        messages = response_json.get("messages")
-        if not isinstance(messages, list):
-            if self._button_callback:
-                self._button_callback({})
+        messages = self._extract_messages(response_json)
+        if not messages:
+            self._notify_buttons({})
             return ""
 
         collected_messages: list[str] = []
         button_map: dict[str, str] = {}
 
         for item in messages:
-            if not isinstance(item, dict):
+            if self._is_user_echo(item):
                 continue
 
-            message_type = item.get("type")
-            if isinstance(message_type, str) and message_type.lower() == "user":
-                # Skip user echoed messages
-                continue
+            text = self._extract_message_text(item)
+            if text:
+                collected_messages.append(text)
 
-            content = item.get("content")
-            if isinstance(content, str):
-                stripped_content = content.strip()
-                if stripped_content:
-                    collected_messages.append(stripped_content)
+            buttons_text, extracted_buttons = self._extract_buttons(item)
+            if buttons_text:
+                collected_messages.append(buttons_text)
+            button_map.update(extracted_buttons)
 
-            buttons = item.get("buttons")
-            button_lines: list[str] = []
-            if isinstance(buttons, list):
-                for button in buttons:
-                    if not isinstance(button, dict):
-                        continue
+        self._notify_buttons(button_map)
+        return self._format_collected_messages(collected_messages)
 
-                    label = button.get("content") or button.get("text") or button.get("value")
-                    button_id = button.get("idButton") or button.get("value")
-                    if isinstance(button_id, str):
-                        if isinstance(label, str):
-                            button_map[button_id] = label
-                            button_lines.append(f"[{button_id}] {label}")
-                        else:
-                            button_map.setdefault(button_id, "")
-                            button_lines.append(f"[{button_id}]")
+    def _extract_messages(self, response_json: dict[str, Any] | list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Return a sanitized list of message dictionaries."""
+        if not isinstance(response_json, dict):
+            return []
 
-            if button_lines:
-                collected_messages.append("Buttons:\n" + "\n".join(button_lines))
+        messages = response_json.get("messages")
+        if not isinstance(messages, list):
+            return []
 
+        return [item for item in messages if isinstance(item, dict)]
+
+    def _notify_buttons(self, buttons: dict[str, str]) -> None:
+        """Send button metadata to the registered callback, if any."""
         if self._button_callback:
-            self._button_callback(button_map)
+            self._button_callback(buttons)
 
+    @staticmethod
+    def _format_collected_messages(collected_messages: list[str]) -> str:
+        """Join message snippets with spacing suitable for final output."""
         return "\n\n".join(collected_messages).strip()
+
+    @staticmethod
+    def _is_user_echo(message: dict[str, Any]) -> bool:
+        """Return True when the message corresponds to user echoes."""
+        message_type = message.get("type")
+        return isinstance(message_type, str) and message_type.lower() == "user"
+
+    @staticmethod
+    def _extract_message_text(message: dict[str, Any]) -> str | None:
+        """Return normalized textual content from a message entry."""
+        content = message.get("content")
+        if not isinstance(content, str):
+            return None
+
+        stripped_content = content.strip()
+        return stripped_content or None
+
+    def _extract_buttons(self, message: dict[str, Any]) -> tuple[str | None, dict[str, str]]:
+        """Gather button metadata and renderable lines for quick replies."""
+        buttons = message.get("buttons")
+        if not isinstance(buttons, list):
+            return None, {}
+
+        button_lines: list[str] = []
+        button_map: dict[str, str] = {}
+        for button in buttons:
+            if not isinstance(button, dict):
+                continue
+
+            label = button.get("content") or button.get("text") or button.get("value")
+            button_id = button.get("idButton") or button.get("value")
+            if not isinstance(button_id, str):
+                continue
+
+            if isinstance(label, str):
+                button_map[button_id] = label
+                button_lines.append(f"[{button_id}] {label}")
+            else:
+                button_map.setdefault(button_id, "")
+                button_lines.append(f"[{button_id}]")
+
+        if not button_lines:
+            return None, button_map
+
+        formatted = "Buttons:\n" + "\n".join(button_lines)
+        return formatted, button_map
 
 
 @dataclass
@@ -124,6 +165,7 @@ class MetroMadridChatbot(Chatbot):
     """Connector for Metro Madrid chatbot API."""
 
     DEFAULT_BASE_URL = "https://kdcaapi.metromadrid.es/api/KDCA/"
+    ONBOARDING_ERROR_MESSAGE = "Failed to complete Metro Madrid onboarding"
 
     def __init__(self, language: str = "es") -> None:
         """Initialize the Metro Madrid chatbot connector."""
@@ -146,9 +188,9 @@ class MetroMadridChatbot(Chatbot):
             self.complete_onboarding(self._language)
         except ConnectorConnectionError:
             raise
-        except Exception:
+        except Exception as err:
             logger.exception("Metro Madrid handshake failed")
-            raise ConnectorConnectionError("Failed to complete Metro Madrid onboarding")
+            raise ConnectorConnectionError(self.ONBOARDING_ERROR_MESSAGE) from err
 
     @classmethod
     def get_chatbot_parameters(cls) -> list[Parameter]:
