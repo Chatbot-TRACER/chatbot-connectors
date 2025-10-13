@@ -51,19 +51,15 @@ The library ships with several ready-to-use connectors. Each connector exposes t
 ### Metro de Madrid
 
 - Uses Metro Madrid's public website widget API and auto-creates a session.
-- Optional `id_project`, `id_client`, and `base_url` parameters default to current production values.
+- Requires a handshake that sends the first message, selects the language, and accepts the privacy policy; the connector performs this sequence automatically using the `language` parameter (`"es"` by default, accepts `"en"`).
 - Example:
   ```python
   from chatbot_connectors.implementations.metro_madrid import MetroMadridChatbot
 
-  bot = MetroMadridChatbot()
-  success, reply = bot.execute_with_input("Español")
-  print(reply)
-  success, reply = bot.execute_with_input("✅ Acepto")
-  print(reply)
+  bot = MetroMadridChatbot(language="es")
   success, reply = bot.execute_with_input("¿A qué hora cierra hoy el metro?")
   print(reply)
-```
+  ```
 
 ### MillionBot
 

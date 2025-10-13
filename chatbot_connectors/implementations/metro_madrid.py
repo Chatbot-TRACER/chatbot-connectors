@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -124,19 +125,10 @@ class MetroMadridChatbot(Chatbot):
 
     DEFAULT_BASE_URL = "https://kdcaapi.metromadrid.es/api/KDCA/"
 
-    def __init__(
-        self,
-        id_project: str = "Mzpv0w4t71t",
-        id_client: str = "0",
-        timeout: int = 20,
-        base_url: str | None = None,
-    ) -> None:
+    def __init__(self, language: str = "es") -> None:
         """Initialize the Metro Madrid chatbot connector."""
         config = MetroMadridConfig(
-            base_url=base_url or self.DEFAULT_BASE_URL,
-            id_project=id_project,
-            id_client=id_client,
-            timeout=timeout,
+            base_url=self.DEFAULT_BASE_URL,
         )
         super().__init__(config)
         self.metro_config = config
@@ -144,34 +136,30 @@ class MetroMadridChatbot(Chatbot):
         self._button_lookup: dict[str, str] = {}
         self._button_id_to_label: dict[str, str] = {}
         self._response_processor = MetroMadridResponseProcessor(self._update_button_cache)
+        self._language = self._normalize_language(language)
 
         if not self.create_new_conversation():
             msg = "Failed to initialize Metro Madrid chatbot session"
             raise ConnectorConnectionError(msg)
+
+        try:
+            self.complete_onboarding(self._language)
+        except ConnectorConnectionError:
+            raise
+        except Exception:
+            logger.exception("Metro Madrid handshake failed")
+            raise ConnectorConnectionError("Failed to complete Metro Madrid onboarding")
 
     @classmethod
     def get_chatbot_parameters(cls) -> list[Parameter]:
         """Return the parameters required to initialize this chatbot."""
         return [
             Parameter(
-                name="id_project",
+                name="language",
                 type="string",
                 required=False,
-                description="Project identifier provided by Metro Madrid.",
-                default="Mzpv0w4t71t",
-            ),
-            Parameter(
-                name="id_client",
-                type="string",
-                required=False,
-                description="Client identifier for the widget, defaults to 0.",
-                default="0",
-            ),
-            Parameter(
-                name="base_url",
-                type="string",
-                required=False,
-                description="Override the API base URL if Metro Madrid changes it.",
+                description="Handshake language (es or en).",
+                default="es",
             ),
         ]
 
@@ -272,6 +260,26 @@ class MetroMadridChatbot(Chatbot):
             self._update_button_cache_from_response(response)
         return response
 
+    def complete_onboarding(self, language: str | None = None) -> None:
+        """Complete the required onboarding flow (language + privacy)."""
+        if not self.user_info:
+            msg = "Metro Madrid session not initialized"
+            raise ConnectorConnectionError(msg)
+
+        chosen_language = language or self._language
+        normalized_lang = self._normalize_language(chosen_language)
+        language_button_id, initial_prompt = self._get_handshake_values(normalized_lang)
+
+        steps = [initial_prompt, f"button:{language_button_id}", "button:PGDPRSI"]
+
+        for step in steps:
+            success, _reply = self.execute_with_input(step)
+            if not success:
+                msg = f"Onboarding step failed while sending '{step}'"
+                raise ConnectorConnectionError(msg)
+
+        self._language = normalized_lang
+
     def _parse_user_input(self, user_msg: str) -> tuple[str, str | None]:
         """Determine whether the user wants to click a button or send plain text."""
         trimmed = user_msg.strip()
@@ -292,6 +300,33 @@ class MetroMadridChatbot(Chatbot):
             return content, cached_id
 
         return trimmed, None
+
+    def _get_handshake_values(self, language: str) -> tuple[str, str]:
+        """Return button identifier and seed message for the desired language."""
+        if language == "es":
+            return "SPNSHYES", "Hola"
+        if language == "en":
+            return "NGLSHYES", "Hello"
+
+        msg = f"Unsupported onboarding language '{language}'"
+        raise ConnectorConnectionError(msg)
+
+    def _normalize_language(self, language: str) -> str:
+        """Normalize a language selector to a supported code."""
+        if not language:
+            msg = "Language selection cannot be empty"
+            raise ConnectorConnectionError(msg)
+
+        normalized = unicodedata.normalize("NFKD", language).encode("ascii", "ignore").decode("ascii")
+        normalized = normalized.strip().casefold()
+
+        if normalized in {"es", "espanol", "spanish", "es-419"}:
+            return "es"
+        if normalized in {"en", "english", "eng"}:
+            return "en"
+
+        msg = f"Unsupported onboarding language '{language}'"
+        raise ConnectorConnectionError(msg)
 
     def _extract_explicit_button(self, message: str) -> tuple[str | None, str | None]:
         """Extract button identifier directives from the user message."""
