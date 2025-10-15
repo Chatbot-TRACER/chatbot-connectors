@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-10-14
+
+- Renamed the Botslovers connector (previously Botlovers) and simplified its configuration to require only the base URL.
+
 ## [0.5.0] - 2025-10-13
 
 ### Added
@@ -17,14 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Botlovers connector with automatic session management and response parsing (supports nested messages, quick replies, GPT fallbacks)
-- CLI/registry updates to expose the Botlovers connector
-- README section summarising built-in connectors, example endpoints for Botlovers (Arthur/Alcampo) and MillionBot deployments
+- Botslovers connector with automatic session management and response parsing (supports nested messages, quick replies, GPT fallbacks)
+- CLI/registry updates to expose the Botslovers connector
+- README section summarising built-in connectors, example endpoints for Botslovers (Arthur/Alcampo) and MillionBot deployments
 
 ### Fixed
 
-- Botlovers retry logic now re-establishes sessions when the backend closes idle conversations
-- Response processor compatibility with Botlovers variants that return flat message lists (e.g., Arthur)
+- Botslovers retry logic now re-establishes sessions when the backend closes idle conversations
+- Response processor compatibility with Botslovers variants that return flat message lists (e.g., Arthur)
 
 ## [0.2.0] - 2025-07-29
 

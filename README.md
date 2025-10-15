@@ -36,14 +36,15 @@ print(response)
 
 The library ships with several ready-to-use connectors. Each connector exposes the parameters listed via `--list-connector-params` in the CLI or `get_chatbot_parameters()` in code.
 
-### Botlovers
+### Botslovers
 
+- Only required parameter: `base_url`.
 - Base URL examples: `https://arthur.botslovers.com/`, `https://alcampo.botslovers.com/`
 - Minimal Python usage:
   ```python
-  from chatbot_connectors.implementations.botlovers import BotloversChatbot
+  from chatbot_connectors.implementations.botslovers import BotsloversChatbot
 
-  bot = BotloversChatbot(base_url="https://arthur.botslovers.com/")
+  bot = BotsloversChatbot(base_url="https://arthur.botslovers.com/")
   success, reply = bot.execute_with_input("Hi Arthur!")
   print(reply)
   ```
