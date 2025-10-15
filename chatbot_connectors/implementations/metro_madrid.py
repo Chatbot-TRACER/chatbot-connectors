@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 from chatbot_connectors.core import (
     Chatbot,
     ChatbotConfig,
+    ChatbotResponse,
     EndpointConfig,
     Parameter,
     Payload,
@@ -179,6 +180,7 @@ class MetroMadridChatbot(Chatbot):
         self._button_id_to_label: dict[str, str] = {}
         self._response_processor = MetroMadridResponseProcessor(self._update_button_cache)
         self._language = self._normalize_language(language)
+        self._allow_recovery = True
 
         if not self.create_new_conversation():
             msg = "Failed to initialize Metro Madrid chatbot session"
@@ -204,6 +206,33 @@ class MetroMadridChatbot(Chatbot):
                 default="es",
             ),
         ]
+
+    def execute_with_input(self, user_msg: str) -> ChatbotResponse:
+        """Send a message, retrying once on API timeouts."""
+        if not self._allow_recovery:
+            return super().execute_with_input(user_msg)
+
+        for attempt in range(2):
+            try:
+                return super().execute_with_input(user_msg)
+            except ConnectorConnectionError as exc:
+                if not self._is_timeout_error(exc):
+                    raise
+
+                if attempt == 1:
+                    raise
+
+                logger.warning(
+                    "Metro Madrid request timed out; attempting session recovery",
+                    exc_info=exc,
+                )
+
+                if not self._recover_session_after_timeout():
+                    logger.exception("Metro Madrid session recovery failed after timeout")
+                    raise
+
+        # Fallback should be unreachable, but keeps the type checker satisfied.
+        return False, self.config.fallback_message
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
         """Return endpoint configurations for Metro Madrid chatbot."""
@@ -447,3 +476,44 @@ class MetroMadridChatbot(Chatbot):
     def _normalize_button_key(value: str) -> str:
         """Normalize values to make button lookups forgiving."""
         return " ".join(value.casefold().split())
+
+    def _is_timeout_error(self, exc: ConnectorConnectionError) -> bool:
+        """Return True when the connector error originated from a timeout."""
+        original_error = getattr(exc, "original_error", None)
+        return isinstance(original_error, requests.exceptions.Timeout)
+
+    def _recover_session_after_timeout(self) -> bool:
+        """Attempt to rebuild the Metro Madrid session after a timeout."""
+        self._reset_http_session()
+        self.user_info = None
+        self.conversation_id = None
+        self._clear_button_cache()
+
+        if not self.create_new_conversation():
+            logger.error("Failed to recreate Metro Madrid conversation after timeout")
+            return False
+
+        previous_flag = self._allow_recovery
+        self._allow_recovery = False
+        try:
+            self.complete_onboarding(self._language)
+        except ConnectorConnectionError:
+            logger.exception("Metro Madrid onboarding failed during session recovery")
+            return False
+        except Exception:
+            logger.exception("Unexpected error during Metro Madrid recovery onboarding")
+            return False
+        finally:
+            self._allow_recovery = previous_flag
+
+        return True
+
+    def _reset_http_session(self) -> None:
+        """Recreate the underlying HTTP session to discard stale connections."""
+        try:
+            self.session.close()
+        except (OSError, requests.exceptions.RequestException):
+            logger.debug("Ignoring error while closing Metro Madrid session", exc_info=True)
+
+        self.session = requests.Session()
+        self._setup_session()
