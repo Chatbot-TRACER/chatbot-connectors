@@ -1,7 +1,7 @@
 """Setup and registration of chatbot implementations with the factory."""
 
 from chatbot_connectors.factory import ChatbotFactory
-from chatbot_connectors.implementations.botlovers import BotloversChatbot
+from chatbot_connectors.implementations.botslovers import BotsloversChatbot
 from chatbot_connectors.implementations.custom import CustomChatbot
 from chatbot_connectors.implementations.metro_madrid import MetroMadridChatbot
 from chatbot_connectors.implementations.millionbot import MillionBot
@@ -17,7 +17,7 @@ def register_all_chatbots() -> None:
 
     ChatbotFactory.register_chatbot("taskyto", ChatbotTaskyto, description="Taskyto chatbot connector")
 
-    ChatbotFactory.register_chatbot("botlovers", BotloversChatbot, description="Botlovers chatbot connector")
+    ChatbotFactory.register_chatbot("botslovers", BotsloversChatbot, description="Botslovers chatbot connector")
 
     ChatbotFactory.register_chatbot(
         "metro_madrid",

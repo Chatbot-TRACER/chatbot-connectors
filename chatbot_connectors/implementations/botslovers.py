@@ -1,4 +1,4 @@
-"""Botlovers chatbot implementation."""
+"""Botslovers chatbot implementation."""
 
 from __future__ import annotations
 
@@ -23,11 +23,11 @@ from chatbot_connectors.logging_utils import get_logger
 logger = get_logger()
 
 
-class BotloversResponseProcessor(ResponseProcessor):
-    """Response processor for Botlovers chatbot."""
+class BotsloversResponseProcessor(ResponseProcessor):
+    """Response processor for Botslovers chatbot."""
 
     def process(self, response_json: dict[str, Any] | list[dict[str, Any]]) -> str:
-        """Extract textual replies from Botlovers responses."""
+        """Extract textual replies from Botslovers responses."""
         if not isinstance(response_json, dict):
             return ""
 
@@ -127,18 +127,18 @@ class BotloversResponseProcessor(ResponseProcessor):
 
 
 @dataclass
-class BotloversConfig(ChatbotConfig):
-    """Configuration specific to Botlovers chatbot."""
+class BotsloversConfig(ChatbotConfig):
+    """Configuration specific to Botslovers chatbot."""
 
-    lang: str = "es"
-    channel: str = "web"
-    widget_form: str = "TRUE"
-    accept_terminos: int = 1
-    contexto_extra: list[Any] = field(default_factory=list)
-    session_refresh_seconds: int = 300
+    lang: str = field(init=False, default="es")
+    channel: str = field(init=False, default="web")
+    widget_form: str = field(init=False, default="TRUE")
+    accept_terminos: int = field(init=False, default=1)
+    contexto_extra: list[Any] = field(init=False, default_factory=list)
+    session_refresh_seconds: int = field(init=False, default=300)
 
     def __post_init__(self) -> None:
-        """Normalize configuration inputs."""
+        """Normalize configuration inputs and prime defaults."""
         if not self.base_url.endswith("/"):
             self.base_url = f"{self.base_url}/"
 
@@ -150,26 +150,15 @@ class BotloversConfig(ChatbotConfig):
         self.headers = merged_headers
 
 
-class BotloversChatbot(Chatbot):
-    """Connector for the Botlovers chatbot API."""
+class BotsloversChatbot(Chatbot):
+    """Connector for the Botslovers chatbot API."""
 
-    def __init__(
-        self,
-        base_url: str,
-        lang: str = "es",
-        timeout: int = 20,
-        session_refresh_seconds: int = 300,
-    ) -> None:
-        """Initialize the Botlovers chatbot connector."""
-        config = BotloversConfig(
-            base_url=base_url,
-            lang=lang,
-            timeout=timeout,
-            session_refresh_seconds=session_refresh_seconds,
-        )
+    def __init__(self, base_url: str) -> None:
+        """Initialize the Botslovers chatbot connector."""
+        config = BotsloversConfig(base_url=base_url)
         super().__init__(config)
 
-        self.botlovers_config = config
+        self.botslovers_config = config
         self.id_user: str | None = None
         self.idweb_user: str | None = None
         self.session_token: str | None = None
@@ -185,26 +174,12 @@ class BotloversChatbot(Chatbot):
                 name="base_url",
                 type="string",
                 required=True,
-                description="The base URL for the Botlovers deployment, e.g. https://alcampo.botslovers.com/",
-            ),
-            Parameter(
-                name="lang",
-                type="string",
-                required=False,
-                description="Language code used for the conversation.",
-                default="es",
-            ),
-            Parameter(
-                name="session_refresh_seconds",
-                type="integer",
-                required=False,
-                description="Seconds before forcing a session refresh via check_session.",
-                default=300,
+                description="The base URL for the Botslovers deployment, e.g. https://alcampo.botslovers.com/",
             ),
         ]
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
-        """Return endpoint configurations for Botlovers chatbot."""
+        """Return endpoint configurations for Botslovers chatbot."""
 
         def _endpoint() -> EndpointConfig:
             return EndpointConfig(path="/bot/web", method=RequestMethod.POST, timeout=self.config.timeout)
@@ -216,20 +191,20 @@ class BotloversChatbot(Chatbot):
         }
 
     def get_response_processor(self) -> ResponseProcessor:
-        """Return the response processor for Botlovers chatbot."""
-        return BotloversResponseProcessor()
+        """Return the response processor for Botslovers chatbot."""
+        return BotsloversResponseProcessor()
 
     def prepare_message_payload(self, user_msg: str) -> Payload:
-        """Prepare the payload for sending a message to Botlovers."""
+        """Prepare the payload for sending a message to Botslovers."""
         if not all([self.id_user, self.idweb_user, self.session_token]):
-            error_msg = "Botlovers session not initialized"
+            error_msg = "Botslovers session not initialized"
             raise ValueError(error_msg)
 
         message_payload = {
             "message": {"message": {"text": user_msg}},
             "iduser": self.id_user,
             "session": self.session_token,
-            "channel": self.botlovers_config.channel,
+            "channel": self.botslovers_config.channel,
         }
 
         data_section = {
@@ -237,9 +212,9 @@ class BotloversChatbot(Chatbot):
             "idweb_user": self.idweb_user,
             "session": self.session_token,
             "message": message_payload,
-            "widget_form": self.botlovers_config.widget_form,
-            "contexto_extra": list(self.botlovers_config.contexto_extra),
-            "lang": self.botlovers_config.lang,
+            "widget_form": self.botslovers_config.widget_form,
+            "contexto_extra": list(self.botslovers_config.contexto_extra),
+            "lang": self.botslovers_config.lang,
         }
 
         return {"data": data_section, "accion": "response_bot"}
@@ -270,7 +245,7 @@ class BotloversChatbot(Chatbot):
                 response_json = self._make_request(url, endpoint_config, payload)
             except requests.RequestException as exc:
                 last_exception = exc
-                logger.warning("Botlovers request attempt %s failed: %s", attempt + 1, exc)
+                logger.warning("Botslovers request attempt %s failed: %s", attempt + 1, exc)
                 self._invalidate_session()
                 continue
 
@@ -281,35 +256,35 @@ class BotloversChatbot(Chatbot):
                 response_input = response_json if isinstance(response_json, (dict, list)) else {}
                 response_text = processor.process(response_input) if response_input else ""
                 return True, response_text
-            logger.warning("Botlovers request attempt %s returned empty response", attempt + 1)
+            logger.warning("Botslovers request attempt %s returned empty response", attempt + 1)
             self._invalidate_session()
             continue
 
         if last_exception is not None:
-            logger.exception("Chatbot request failed for Botlovers after retries")
+            logger.exception("Chatbot request failed for Botslovers after retries")
             msg = f"Chatbot request failed for {self.__class__.__name__} at {url}"
             raise ConnectorConnectionError(msg, original_error=last_exception) from last_exception
 
         return False, "Failed to obtain response after retries"
 
     def create_new_conversation(self) -> bool:
-        """Create or refresh the Botlovers conversation."""
+        """Create or refresh the Botslovers conversation."""
         try:
             self._initialize_conversation()
         except Exception:
-            logger.exception("Failed to initialize Botlovers conversation")
+            logger.exception("Failed to initialize Botslovers conversation")
             return False
         return True
 
     def _initialize_conversation(self) -> None:
-        """Perform the handshake with Botlovers endpoints."""
+        """Perform the handshake with Botslovers endpoints."""
         endpoints = self.get_endpoints()
         user_check = endpoints["user_check"]
         check_session = endpoints["check_session"]
 
         url = self.config.get_full_url(user_check.path)
 
-        user_payload = {"data": {"accept_terminos": self.botlovers_config.accept_terminos}, "accion": "user_check"}
+        user_payload = {"data": {"accept_terminos": self.botslovers_config.accept_terminos}, "accion": "user_check"}
         user_response = self._make_request(url, user_check, user_payload) or {}
 
         if not isinstance(user_response, dict):
@@ -319,7 +294,7 @@ class BotloversChatbot(Chatbot):
         self._update_session_state(user_response)
 
         if not all([self.id_user, self.idweb_user, self.session_token]):
-            error_msg = "Incomplete Botlovers user_check response"
+            error_msg = "Incomplete Botslovers user_check response"
             raise ValueError(error_msg)
 
         check_payload = {
@@ -327,9 +302,9 @@ class BotloversChatbot(Chatbot):
                 "id_user": self.id_user,
                 "idweb_user": self.idweb_user,
                 "session": self.session_token,
-                "widget_form": self.botlovers_config.widget_form,
-                "lang": self.botlovers_config.lang,
-                "contexto_extra": list(self.botlovers_config.contexto_extra),
+                "widget_form": self.botslovers_config.widget_form,
+                "lang": self.botslovers_config.lang,
+                "contexto_extra": list(self.botslovers_config.contexto_extra),
             },
             "accion": "check_session",
         }
@@ -380,7 +355,7 @@ class BotloversChatbot(Chatbot):
         try:
             self._perform_check_session()
         except (requests.RequestException, ValueError, TypeError) as exc:
-            logger.warning("Failed to refresh Botlovers session: %s", exc)
+            logger.warning("Failed to refresh Botslovers session: %s", exc)
             self._reinitialize_session()
 
     def _perform_check_session(self) -> None:
@@ -396,9 +371,9 @@ class BotloversChatbot(Chatbot):
                 "id_user": self.id_user,
                 "idweb_user": self.idweb_user,
                 "session": self.session_token,
-                "widget_form": self.botlovers_config.widget_form,
-                "lang": self.botlovers_config.lang,
-                "contexto_extra": list(self.botlovers_config.contexto_extra),
+                "widget_form": self.botslovers_config.widget_form,
+                "lang": self.botslovers_config.lang,
+                "contexto_extra": list(self.botslovers_config.contexto_extra),
             },
             "accion": "check_session",
         }
@@ -430,7 +405,7 @@ class BotloversChatbot(Chatbot):
         try:
             self._initialize_conversation()
         except Exception:  # noqa: BLE001
-            logger.warning("Botlovers session reinitialization failed", exc_info=True)
+            logger.warning("Botslovers session reinitialization failed", exc_info=True)
             self._invalidate_session()
 
     def _session_is_stale(self) -> bool:
@@ -438,6 +413,6 @@ class BotloversChatbot(Chatbot):
         if self.session_last_updated is None:
             return True
 
-        refresh_after = timedelta(seconds=self.botlovers_config.session_refresh_seconds)
+        refresh_after = timedelta(seconds=self.botslovers_config.session_refresh_seconds)
         current_time = datetime.now(tz=UTC)
         return current_time - self.session_last_updated >= refresh_after
