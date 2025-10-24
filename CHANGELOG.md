@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.6.0 - 2025-10-24
+
+- Implemented "resilient sessions" with bigger timeouts and retries.
+
 ## [0.5.1] - 2025-10-14
 
 - Renamed the Botslovers connector (previously Botlovers) and simplified its configuration to require only the base URL.
