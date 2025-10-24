@@ -2,12 +2,16 @@
 
 import json
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Literal, TypeAlias
 from urllib.parse import urljoin
 
 import requests
+from requests import Session
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from chatbot_connectors.exceptions import (
     ConnectorAuthenticationError,
@@ -23,6 +27,54 @@ ChatbotResponse = tuple[bool, str | None]
 Headers = dict[str, str]
 Payload = dict[str, Any]
 JsonSerializable: TypeAlias = dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
+
+
+def _make_resilient_session() -> Session:
+    """Create a requests session configured with retry and pooling defaults."""
+    retry = Retry(
+        total=4,
+        connect=3,
+        read=3,
+        status=3,
+        backoff_factor=0.5,
+        status_forcelist=[429, 500, 502, 503, 504],
+        respect_retry_after_header=True,
+        allowed_methods={"GET", "HEAD", "OPTIONS"},
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=20, pool_maxsize=50)
+
+    session = Session()
+    session.headers.update(
+        {
+            "Accept": "application/json",
+            "User-Agent": "TRACER/1.0 (+ops@yourdomain)",
+        }
+    )
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
+
+
+def _normalize_timeout(timeout: float | Sequence[float] | None) -> tuple[float, float]:
+    """Normalize a timeout value into a (connect, read) tuple."""
+    if timeout is None:
+        return (5.0, 60.0)
+    if isinstance(timeout, (int, float)):
+        value = float(timeout)
+        return (value, value)
+    if isinstance(timeout, Sequence):
+        if isinstance(timeout, (str, bytes)):
+            error_msg = "Timeout sequence must be a tuple/list of numeric values, not a string"
+            raise TypeError(error_msg)
+        timeout_length = 2
+        if len(timeout) != timeout_length:
+            error_msg = "Timeout sequence must contain exactly two numeric values"
+            raise ValueError(error_msg)
+        connect, read = timeout
+        return (float(connect), float(read))
+    error_msg = f"Unsupported timeout type: {type(timeout)!r}"
+    raise TypeError(error_msg)
 
 
 @dataclass
@@ -52,7 +104,7 @@ class EndpointConfig:
     path: str
     method: RequestMethod = RequestMethod.POST
     headers: Headers = field(default_factory=dict)
-    timeout: int = 20
+    timeout: float | Sequence[float] | None = 20
 
 
 @dataclass
@@ -60,7 +112,7 @@ class ChatbotConfig:
     """Base configuration for chatbot connectors."""
 
     base_url: str
-    timeout: int = 20
+    timeout: float | Sequence[float] | None = 20
     fallback_message: str = "I do not understand you"
     headers: Headers = field(default_factory=dict)
 
@@ -122,7 +174,7 @@ class Chatbot(ABC):
             config: The configuration for the chatbot connector.
         """
         self.config = config
-        self.session = requests.Session()
+        self.session = _make_resilient_session()
         self.conversation_id: str | None = None
         self._setup_session()
 
@@ -134,6 +186,11 @@ class Chatbot(ABC):
     def _setup_session(self) -> None:
         """Set up the requests session with default headers."""
         self.session.headers.update(self.config.headers)
+
+    def _resolve_timeout(self, timeout: float | Sequence[float] | None) -> tuple[float, float]:
+        """Return a (connect, read) timeout tuple using connector defaults."""
+        chosen_timeout = timeout if timeout is not None else self.config.timeout
+        return _normalize_timeout(chosen_timeout)
 
     def health_check(self) -> None:
         """Performs a health check on a given endpoint to ensure connectivity.
@@ -321,12 +378,16 @@ class Chatbot(ABC):
             JSON response or None if failed
         """
         headers = {**self.session.headers, **endpoint_config.headers}
-
+        timeout = self._resolve_timeout(endpoint_config.timeout)
         if endpoint_config.method == RequestMethod.GET:
-            response = self.session.get(url, params=payload, headers=headers, timeout=endpoint_config.timeout)
+            response = self.session.get(url, params=payload, headers=headers, timeout=timeout)
         else:
             response = self.session.request(
-                endpoint_config.method.value, url, json=payload, headers=headers, timeout=endpoint_config.timeout
+                endpoint_config.method.value,
+                url,
+                json=payload,
+                headers=headers,
+                timeout=timeout,
             )
 
         response.raise_for_status()
