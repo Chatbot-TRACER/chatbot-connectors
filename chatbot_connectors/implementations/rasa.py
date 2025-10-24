@@ -91,7 +91,7 @@ class RasaChatbot(Chatbot):
         self,
         base_url: str,
         sender_id: str = "user",
-        timeout: float | tuple[float, float] | None = 20,
+        timeout: float | tuple[float, float] | None = 60,
     ) -> None:
         """Initialize the RASA chatbot connector.
 

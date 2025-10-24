@@ -67,7 +67,7 @@ class MillionBotConfig(ChatbotConfig):
 class MillionBot(Chatbot):
     """Connector for the MillionBot chatbot API."""
 
-    def __init__(self, bot_id: str, timeout: float | tuple[float, float] | None = 20) -> None:
+    def __init__(self, bot_id: str, timeout: float | tuple[float, float] | None = 60) -> None:
         """Initialize the MillionBot chatbot connector."""
         config = MillionBotConfig(
             base_url="https://api.1millionbot.com/api/public/",

@@ -43,7 +43,7 @@ class ChatbotTaskyto(Chatbot):
         self,
         base_url: str,
         port: int = 5000,
-        timeout: float | tuple[float, float] | None = 20,
+        timeout: float | tuple[float, float] | None = 60,
     ) -> None:
         """Initialize the Taskyto chatbot connector.
 

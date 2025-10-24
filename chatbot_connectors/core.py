@@ -104,7 +104,7 @@ class EndpointConfig:
     path: str
     method: RequestMethod = RequestMethod.POST
     headers: Headers = field(default_factory=dict)
-    timeout: float | Sequence[float] | None = 20
+    timeout: float | Sequence[float] | None = 60
 
 
 @dataclass
@@ -112,7 +112,7 @@ class ChatbotConfig:
     """Base configuration for chatbot connectors."""
 
     base_url: str
-    timeout: float | Sequence[float] | None = 20
+    timeout: float | Sequence[float] | None = 60
     fallback_message: str = "I do not understand you"
     headers: Headers = field(default_factory=dict)
 

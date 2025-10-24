@@ -105,7 +105,7 @@ class CustomConfig(ChatbotConfig):
         return cls(
             name=config_data.get("name", "Custom Chatbot"),
             base_url=config_data.get("base_url", ""),
-            timeout=config_data.get("timeout", 20),
+            timeout=config_data.get("timeout", 60),
             fallback_message=config_data.get("fallback_message", "I do not understand you"),
             headers=config_data.get("headers", {}),
             send_message=send_message_config,
