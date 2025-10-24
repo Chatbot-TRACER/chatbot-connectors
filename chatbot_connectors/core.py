@@ -39,18 +39,12 @@ def _make_resilient_session() -> Session:
         backoff_factor=0.5,
         status_forcelist=[429, 500, 502, 503, 504],
         respect_retry_after_header=True,
-        allowed_methods={"GET", "HEAD", "OPTIONS"},
+        allowed_methods={"GET", "HEAD", "OPTIONS", "POST"},
         raise_on_status=False,
     )
     adapter = HTTPAdapter(max_retries=retry, pool_connections=20, pool_maxsize=50)
 
     session = Session()
-    session.headers.update(
-        {
-            "Accept": "application/json",
-            "User-Agent": "TRACER/1.0 (+ops@yourdomain)",
-        }
-    )
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     return session
