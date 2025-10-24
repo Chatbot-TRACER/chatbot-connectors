@@ -87,13 +87,18 @@ class RasaConfig(ChatbotConfig):
 class RasaChatbot(Chatbot):
     """Connector for RASA chatbot using REST webhook."""
 
-    def __init__(self, base_url: str, sender_id: str = "user", timeout: int = 20) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        sender_id: str = "user",
+        timeout: float | tuple[float, float] | None = 60,
+    ) -> None:
         """Initialize the RASA chatbot connector.
 
         Args:
             base_url: The base URL for the RASA server
             sender_id: Unique identifier for the conversation sender
-            timeout: Request timeout in seconds
+            timeout: Request timeout in seconds or (connect, read) tuple
         """
         config = RasaConfig(base_url=base_url, sender_id=sender_id, timeout=timeout)
         super().__init__(config)

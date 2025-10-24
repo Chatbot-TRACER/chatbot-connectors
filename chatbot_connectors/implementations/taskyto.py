@@ -39,13 +39,18 @@ class TaskytoConfig(ChatbotConfig):
 class ChatbotTaskyto(Chatbot):
     """Connector for the Taskyto chatbot API."""
 
-    def __init__(self, base_url: str, port: int = 5000, timeout: int = 20) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        port: int = 5000,
+        timeout: float | tuple[float, float] | None = 60,
+    ) -> None:
         """Initialize the Taskyto chatbot connector.
 
         Args:
             base_url: The base URL for the Taskyto API.
             port: The port for the Taskyto API.
-            timeout: Request timeout in seconds.
+            timeout: Request timeout in seconds or (connect, read) tuple.
         """
         config = TaskytoConfig(base_url=f"{base_url}:{port}", timeout=timeout)
         super().__init__(config)

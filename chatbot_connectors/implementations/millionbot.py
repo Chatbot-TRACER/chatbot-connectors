@@ -67,7 +67,7 @@ class MillionBotConfig(ChatbotConfig):
 class MillionBot(Chatbot):
     """Connector for the MillionBot chatbot API."""
 
-    def __init__(self, bot_id: str, timeout: int = 20) -> None:
+    def __init__(self, bot_id: str, timeout: float | tuple[float, float] | None = 60) -> None:
         """Initialize the MillionBot chatbot connector."""
         config = MillionBotConfig(
             base_url="https://api.1millionbot.com/api/public/",
@@ -107,11 +107,12 @@ class MillionBot(Chatbot):
             "Authorization": "API-KEY 60553d58c41f5dfa095b34b5",
         }
         user_url = self.config.get_full_url("users")
+        timeout = self._resolve_timeout(self.config.timeout)
         user_response = self.session.post(
             user_url,
             headers=user_headers,
             json=user_payload,
-            timeout=self.config.timeout,
+            timeout=timeout,
         )
         user_response.raise_for_status()
         user_data = user_response.json()
@@ -134,7 +135,7 @@ class MillionBot(Chatbot):
             conversation_url,
             headers=conversation_headers,
             json=conversation_payload,
-            timeout=self.config.timeout,
+            timeout=timeout,
         )
         conversation_response.raise_for_status()
         conversation_data = conversation_response.json()
