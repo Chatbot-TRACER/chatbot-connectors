@@ -29,6 +29,41 @@ Payload = dict[str, Any]
 JsonSerializable: TypeAlias = dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
 
 
+def extract_json_path(data: JsonSerializable, path: str) -> JsonSerializable | None:
+    """Extract a value from nested dict/list structures using dot-separated paths.
+
+    Supports integer segments for list indexing (including negative indices).
+    Returns None if traversal fails at any step.
+
+    Examples:
+            - "message" -> response["message"]
+            - "data.text" -> response["data"]["text"]
+            - "messages.0.content" -> response["messages"][0]["content"]
+            - "results.-1.value" -> response["results"][-1]["value"]
+    """
+    if not path:
+        return None
+
+    value: JsonSerializable = data
+    for key in path.split("."):
+        if isinstance(value, list):
+            try:
+                index = int(key)
+            except ValueError:
+                return None
+            try:
+                value = value[index]
+            except IndexError:
+                return None
+        elif isinstance(value, dict):
+            if key not in value:
+                return None
+            value = value[key]
+        else:
+            return None
+    return value
+
+
 def _make_resilient_session() -> Session:
     """Create a requests session configured with retry and pooling defaults."""
     retry = Retry(

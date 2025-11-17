@@ -15,6 +15,7 @@ from chatbot_connectors.core import (
     Payload,
     RequestMethod,
     ResponseProcessor,
+    extract_json_path,
 )
 
 
@@ -40,20 +41,8 @@ class CustomResponseProcessor(ResponseProcessor):
         if not self.response_path:
             return ""
 
-        try:
-            value = response_json
-            for key in self.response_path.split("."):
-                if isinstance(value, list):
-                    try:
-                        index = int(key)
-                        value = value[index]
-                    except (ValueError, IndexError):
-                        return ""  # Invalid key for list indexing
-                else:
-                    value = value[key]
-            return str(value)
-        except (KeyError, IndexError, TypeError, ValueError):
-            return ""
+        extracted = extract_json_path(response_json, self.response_path)
+        return "" if extracted is None else str(extracted)
 
 
 @dataclass

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added a reusable `extract_json_path` helper and wired Custom response processing to it, so path-based response extraction can be shared across connectors.
+- Taskyto response processing now uses the shared JSON path extractor to normalize message retrieval.
 - Custom endpoint payload templating is encapsulated via `CustomEndpointConfig.render_payload`, reducing duplication in how `{user_msg}` placeholders are resolved.
 - Custom custom endpoint configuration now inherits from the shared `EndpointConfig` to reduce duplication and reuse common settings (including per-endpoint timeouts) across connectors.
 
