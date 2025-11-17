@@ -62,6 +62,20 @@ class CustomEndpointConfig(EndpointConfig):
 
     payload_template: dict[str, JsonSerializable] = field(default_factory=dict)
 
+    def render_payload(self, user_msg: str) -> Payload:
+        """Return the payload with {user_msg} placeholders replaced."""
+
+        def replace_user_msg(obj: JsonSerializable) -> JsonSerializable:
+            if isinstance(obj, dict):
+                return {key: replace_user_msg(value) for key, value in obj.items()}
+            if isinstance(obj, list):
+                return [replace_user_msg(item) for item in obj]
+            if isinstance(obj, str):
+                return obj.replace("{user_msg}", user_msg)
+            return obj
+
+        return replace_user_msg(self.payload_template)
+
 
 @dataclass
 class CustomConfig(ChatbotConfig):
@@ -152,18 +166,7 @@ class CustomChatbot(Chatbot):
         Returns:
             Payload dictionary for the API request
         """
-
-        def replace_user_msg(obj: JsonSerializable) -> JsonSerializable:
-            """Recursively replace {user_msg} placeholders in the payload template."""
-            if isinstance(obj, dict):
-                return {key: replace_user_msg(value) for key, value in obj.items()}
-            if isinstance(obj, list):
-                return [replace_user_msg(item) for item in obj]
-            if isinstance(obj, str):
-                return obj.replace("{user_msg}", user_msg)
-            return obj
-
-        return replace_user_msg(self.custom_config.send_message.payload_template)
+        return self.custom_config.send_message.render_payload(user_msg)
 
     def _requires_conversation_id(self) -> bool:
         """Custom chatbot conversation tracking depends on the implementation."""
