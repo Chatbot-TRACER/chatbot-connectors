@@ -11,6 +11,7 @@ from chatbot_connectors.core import (
     Payload,
     RequestMethod,
     ResponseProcessor,
+    extract_json_path,
 )
 
 
@@ -28,7 +29,8 @@ class TaskytoResponseProcessor(ResponseProcessor):
         """
         if isinstance(response_json, list):
             return ""
-        return response_json.get("message", "")
+        message = extract_json_path(response_json, "message")
+        return message if isinstance(message, str) else ""
 
 
 @dataclass

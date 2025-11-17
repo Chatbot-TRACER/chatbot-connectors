@@ -1,10 +1,7 @@
 """Custom chatbot implementation."""
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
-
-import yaml
 
 from chatbot_connectors.core import (
     Chatbot,
@@ -15,6 +12,7 @@ from chatbot_connectors.core import (
     Payload,
     RequestMethod,
     ResponseProcessor,
+    extract_json_path,
 )
 
 
@@ -40,30 +38,29 @@ class CustomResponseProcessor(ResponseProcessor):
         if not self.response_path:
             return ""
 
-        try:
-            value = response_json
-            for key in self.response_path.split("."):
-                if isinstance(value, list):
-                    try:
-                        index = int(key)
-                        value = value[index]
-                    except (ValueError, IndexError):
-                        return ""  # Invalid key for list indexing
-                else:
-                    value = value[key]
-            return str(value)
-        except (KeyError, IndexError, TypeError, ValueError):
-            return ""
+        extracted = extract_json_path(response_json, self.response_path)
+        return "" if extracted is None else str(extracted)
 
 
 @dataclass
-class CustomEndpointConfig:
+class CustomEndpointConfig(EndpointConfig):
     """Configuration for a custom endpoint."""
 
-    path: str
-    method: RequestMethod = RequestMethod.POST
-    headers: dict[str, str] = field(default_factory=dict)
     payload_template: dict[str, JsonSerializable] = field(default_factory=dict)
+
+    def render_payload(self, user_msg: str) -> Payload:
+        """Return the payload with {user_msg} placeholders replaced."""
+
+        def replace_user_msg(obj: JsonSerializable) -> JsonSerializable:
+            if isinstance(obj, dict):
+                return {key: replace_user_msg(value) for key, value in obj.items()}
+            if isinstance(obj, list):
+                return [replace_user_msg(item) for item in obj]
+            if isinstance(obj, str):
+                return obj.replace("{user_msg}", user_msg)
+            return obj
+
+        return replace_user_msg(self.payload_template)
 
 
 @dataclass
@@ -77,28 +74,13 @@ class CustomConfig(ChatbotConfig):
     @classmethod
     def from_yaml(cls, file_path: str) -> "CustomConfig":
         """Load configuration from a YAML file."""
-        try:
-            with Path(file_path).open() as f:
-                config_data = yaml.safe_load(f)
-        except FileNotFoundError as e:
-            msg = f"Configuration file not found: {file_path}"
-            raise FileNotFoundError(msg) from e
-        except yaml.YAMLError as e:
-            msg = f"Invalid YAML format in configuration file: {file_path}"
-            raise yaml.YAMLError(msg) from e
-        except Exception as e:
-            msg = f"Error reading configuration file: {file_path}"
-            raise OSError(msg) from e
-
-        if not isinstance(config_data, dict):
-            msg = f"Configuration file must contain a YAML dictionary: {file_path}"
-            raise TypeError(msg)
-
+        config_data = cls.load_yaml(file_path)
         send_message_data = config_data.get("send_message", {})
         send_message_config = CustomEndpointConfig(
             path=send_message_data.get("path", "/"),
             method=RequestMethod(send_message_data.get("method", "POST").upper()),
             headers=send_message_data.get("headers", {}),
+            timeout=send_message_data.get("timeout", config_data.get("timeout", 60)),
             payload_template=send_message_data.get("payload_template", {}),
         )
 
@@ -139,14 +121,7 @@ class CustomChatbot(Chatbot):
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
         """Return endpoint configurations for the custom chatbot."""
-        return {
-            "send_message": EndpointConfig(
-                path=self.custom_config.send_message.path,
-                method=self.custom_config.send_message.method,
-                headers=self.custom_config.send_message.headers,
-                timeout=self.custom_config.timeout,
-            )
-        }
+        return {"send_message": self.custom_config.send_message}
 
     def get_response_processor(self) -> ResponseProcessor:
         """Return the response processor for the custom chatbot."""
@@ -161,18 +136,7 @@ class CustomChatbot(Chatbot):
         Returns:
             Payload dictionary for the API request
         """
-
-        def replace_user_msg(obj: JsonSerializable) -> JsonSerializable:
-            """Recursively replace {user_msg} placeholders in the payload template."""
-            if isinstance(obj, dict):
-                return {key: replace_user_msg(value) for key, value in obj.items()}
-            if isinstance(obj, list):
-                return [replace_user_msg(item) for item in obj]
-            if isinstance(obj, str):
-                return obj.replace("{user_msg}", user_msg)
-            return obj
-
-        return replace_user_msg(self.custom_config.send_message.payload_template)
+        return self.custom_config.send_message.render_payload(user_msg)
 
     def _requires_conversation_id(self) -> bool:
         """Custom chatbot conversation tracking depends on the implementation."""

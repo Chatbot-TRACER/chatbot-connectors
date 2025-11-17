@@ -5,10 +5,12 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any, Literal, TypeAlias
 from urllib.parse import urljoin
 
 import requests
+import yaml
 from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -27,6 +29,41 @@ ChatbotResponse = tuple[bool, str | None]
 Headers = dict[str, str]
 Payload = dict[str, Any]
 JsonSerializable: TypeAlias = dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
+
+
+def extract_json_path(data: JsonSerializable, path: str) -> JsonSerializable | None:
+    """Extract a value from nested dict/list structures using dot-separated paths.
+
+    Supports integer segments for list indexing (including negative indices).
+    Returns None if traversal fails at any step.
+
+    Examples:
+            - "message" -> response["message"]
+            - "data.text" -> response["data"]["text"]
+            - "messages.0.content" -> response["messages"][0]["content"]
+            - "results.-1.value" -> response["results"][-1]["value"]
+    """
+    if not path:
+        return None
+
+    value: JsonSerializable = data
+    for key in path.split("."):
+        if isinstance(value, list):
+            try:
+                index = int(key)
+            except ValueError:
+                return None
+            try:
+                value = value[index]
+            except IndexError:
+                return None
+        elif isinstance(value, dict):
+            if key not in value:
+                return None
+            value = value[key]
+        else:
+            return None
+    return value
 
 
 def _make_resilient_session() -> Session:
@@ -113,6 +150,28 @@ class ChatbotConfig:
     def get_full_url(self, endpoint: str) -> str:
         """Construct full URL from base URL and endpoint."""
         return urljoin(self.base_url, endpoint.lstrip("/"))
+
+    @classmethod
+    def load_yaml(cls, file_path: str) -> dict[str, Any]:
+        """Load a YAML configuration file as a dictionary with consistent error handling."""
+        try:
+            with Path(file_path).open() as file_handle:
+                data = yaml.safe_load(file_handle)
+        except FileNotFoundError as exc:
+            msg = f"Configuration file not found: {file_path}"
+            raise FileNotFoundError(msg) from exc
+        except yaml.YAMLError as exc:
+            msg = f"Invalid YAML format in configuration file: {file_path}"
+            raise yaml.YAMLError(msg) from exc
+        except Exception as exc:  # pragma: no cover - defensive guard
+            msg = f"Error reading configuration file: {file_path}"
+            raise OSError(msg) from exc
+
+        if not isinstance(data, dict):
+            msg = f"Configuration file must contain a YAML dictionary: {file_path}"
+            raise TypeError(msg)
+
+        return data
 
 
 class ResponseProcessor(ABC):

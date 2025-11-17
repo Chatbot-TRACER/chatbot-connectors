@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 0.7.0 - 2025-11-17
+
+- Added a reusable `extract_json_path` helper and wired Custom response processing to it, so path-based response extraction can be shared across connectors.
+- Taskyto response processing now uses the shared JSON path extractor to normalize message retrieval.
+- Custom endpoint payload templating is encapsulated via `CustomEndpointConfig.render_payload`, reducing duplication in how `{user_msg}` placeholders are resolved.
+- Custom custom endpoint configuration now inherits from the shared `EndpointConfig` to reduce duplication and reuse common settings (including per-endpoint timeouts) across connectors.
+- Added a base `ChatbotConfig.load_yaml` helper to centralize YAML parsing/validation and reduce duplicated error handling in config loaders.
 
 ## 0.6.0 - 2025-10-24
 
@@ -71,7 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MillionBot Connector**: Integration with MillionBot platform
 - **Taskyto Connector**: Support for Taskyto chatbot API
 
-[Unreleased]: https://github.com/Chatbot-TRACER/chatbot-connectors/compare/v0.5.0...HEAD
 [0.5.0]: https://github.com/Chatbot-TRACER/chatbot-connectors/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Chatbot-TRACER/chatbot-connectors/compare/v0.2.0...v0.4.0
 [0.2.0]: https://github.com/Chatbot-TRACER/chatbot-connectors/compare/v0.1.0...v0.2.0
