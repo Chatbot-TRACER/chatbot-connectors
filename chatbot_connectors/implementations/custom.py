@@ -57,12 +57,9 @@ class CustomResponseProcessor(ResponseProcessor):
 
 
 @dataclass
-class CustomEndpointConfig:
+class CustomEndpointConfig(EndpointConfig):
     """Configuration for a custom endpoint."""
 
-    path: str
-    method: RequestMethod = RequestMethod.POST
-    headers: dict[str, str] = field(default_factory=dict)
     payload_template: dict[str, JsonSerializable] = field(default_factory=dict)
 
 
@@ -99,6 +96,7 @@ class CustomConfig(ChatbotConfig):
             path=send_message_data.get("path", "/"),
             method=RequestMethod(send_message_data.get("method", "POST").upper()),
             headers=send_message_data.get("headers", {}),
+            timeout=send_message_data.get("timeout", config_data.get("timeout", 60)),
             payload_template=send_message_data.get("payload_template", {}),
         )
 
@@ -139,14 +137,7 @@ class CustomChatbot(Chatbot):
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
         """Return endpoint configurations for the custom chatbot."""
-        return {
-            "send_message": EndpointConfig(
-                path=self.custom_config.send_message.path,
-                method=self.custom_config.send_message.method,
-                headers=self.custom_config.send_message.headers,
-                timeout=self.custom_config.timeout,
-            )
-        }
+        return {"send_message": self.custom_config.send_message}
 
     def get_response_processor(self) -> ResponseProcessor:
         """Return the response processor for the custom chatbot."""

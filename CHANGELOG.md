@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Custom custom endpoint configuration now inherits from the shared `EndpointConfig` to reduce duplication and reuse common settings (including per-endpoint timeouts) across connectors.
+
 ## 0.6.0 - 2025-10-24
 
 - Implemented "resilient sessions" with bigger timeouts and retries.
