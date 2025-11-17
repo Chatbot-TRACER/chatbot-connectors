@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Taskyto response processing now uses the shared JSON path extractor to normalize message retrieval.
 - Custom endpoint payload templating is encapsulated via `CustomEndpointConfig.render_payload`, reducing duplication in how `{user_msg}` placeholders are resolved.
 - Custom custom endpoint configuration now inherits from the shared `EndpointConfig` to reduce duplication and reuse common settings (including per-endpoint timeouts) across connectors.
+- Added a base `ChatbotConfig.load_yaml` helper to centralize YAML parsing/validation and reduce duplicated error handling in config loaders.
 
 ## 0.6.0 - 2025-10-24
 

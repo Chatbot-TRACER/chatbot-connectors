@@ -1,10 +1,7 @@
 """Custom chatbot implementation."""
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
-
-import yaml
 
 from chatbot_connectors.core import (
     Chatbot,
@@ -77,23 +74,7 @@ class CustomConfig(ChatbotConfig):
     @classmethod
     def from_yaml(cls, file_path: str) -> "CustomConfig":
         """Load configuration from a YAML file."""
-        try:
-            with Path(file_path).open() as f:
-                config_data = yaml.safe_load(f)
-        except FileNotFoundError as e:
-            msg = f"Configuration file not found: {file_path}"
-            raise FileNotFoundError(msg) from e
-        except yaml.YAMLError as e:
-            msg = f"Invalid YAML format in configuration file: {file_path}"
-            raise yaml.YAMLError(msg) from e
-        except Exception as e:
-            msg = f"Error reading configuration file: {file_path}"
-            raise OSError(msg) from e
-
-        if not isinstance(config_data, dict):
-            msg = f"Configuration file must contain a YAML dictionary: {file_path}"
-            raise TypeError(msg)
-
+        config_data = cls.load_yaml(file_path)
         send_message_data = config_data.get("send_message", {})
         send_message_config = CustomEndpointConfig(
             path=send_message_data.get("path", "/"),
