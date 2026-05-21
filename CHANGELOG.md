@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## 0.7.2 - 2026-05-21
+
+- Updated the MillionBot connector to accept configurable `api_key`, `site_url`, and optional `chat_session_token` parameters.
+- MillionBot now initializes a fresh public widget session automatically by creating the user and conversation before sending messages.
+- MillionBot now sends browser-style widget headers, including `Origin`, `Referer`, `User-Agent`, and `x-chat-session-token`.
+- MillionBot message payloads now include the configured `site_url`, matching ADA UAM widget requests.
+
 ## 0.7.1 - 2026-05-21
 
 - New 1millionbot API KEY.

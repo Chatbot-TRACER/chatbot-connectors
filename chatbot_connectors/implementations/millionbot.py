@@ -1,7 +1,9 @@
 """MillionBot chatbot implementation."""
 
+import secrets
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 from chatbot_connectors.core import (
     Chatbot,
@@ -62,20 +64,62 @@ class MillionBotConfig(ChatbotConfig):
     """Configuration for the MillionBot chatbot."""
 
     bot_id: str = ""
+    api_key: str = ""
+    site_url: str = "https://www.uam.es/"
+    language: str = "es"
+    user_language: str = "es-ES"
+    platform: str = "Win32"
+    country: str = "Spain"
+    country_iso_code: str = "ES"
+    timezone: str = "Europe/Madrid"
+    ip: str = "127.0.0.1"
+    integration: str = "web"
+    gdpr: bool = True
+    chat_session_token: str = ""
 
 
 class MillionBot(Chatbot):
     """Connector for the MillionBot chatbot API."""
 
-    def __init__(self, bot_id: str, timeout: float | tuple[float, float] | None = 60) -> None:
+    def __init__(  # noqa: PLR0913
+        self,
+        bot_id: str,
+        *,
+        api_key: str = "60a3bee2e3987316fed3218f",
+        site_url: str = "https://www.uam.es/",
+        language: str = "es",
+        user_language: str = "es-ES",
+        platform: str = "Win32",
+        country: str = "Spain",
+        country_iso_code: str = "ES",
+        timezone: str = "Europe/Madrid",
+        ip: str = "127.0.0.1",
+        integration: str = "web",
+        gdpr: bool = True,
+        chat_session_token: str = "",
+        timeout: float | tuple[float, float] | None = 60,
+    ) -> None:
         """Initialize the MillionBot chatbot connector."""
         config = MillionBotConfig(
             base_url="https://api.1millionbot.com/api/public/",
             bot_id=bot_id,
+            api_key=api_key,
+            site_url=site_url,
+            language=language,
+            user_language=user_language,
+            platform=platform,
+            country=country,
+            country_iso_code=country_iso_code,
+            timezone=timezone,
+            ip=ip,
+            integration=integration,
+            gdpr=gdpr,
+            chat_session_token=chat_session_token,
             timeout=timeout,
         )
         super().__init__(config)
         self.millionbot_config = config
+        self.chat_session_token = chat_session_token or secrets.token_hex(32)
         self._initialize_conversation()
 
     @classmethod
@@ -87,25 +131,63 @@ class MillionBot(Chatbot):
                 type="string",
                 required=True,
                 description="The Bot ID for the MillionBot.",
-            )
+            ),
+            Parameter(
+                name="api_key",
+                type="string",
+                required=False,
+                description="The public API key for the MillionBot widget.",
+                default="60a3bee2e3987316fed3218f",
+            ),
+            Parameter(
+                name="site_url",
+                type="string",
+                required=False,
+                description="The website URL where the MillionBot widget is embedded.",
+                default="https://www.uam.es/",
+            ),
+            Parameter(
+                name="chat_session_token",
+                type="string",
+                required=False,
+                description="Optional x-chat-session-token captured from the widget when the bot requires it.",
+                default="",
+            ),
         ]
+
+    def _browser_headers(self) -> dict[str, str]:
+        """Return browser-like headers expected by public MillionBot widgets."""
+        parsed_site_url = urlparse(self.millionbot_config.site_url)
+        origin = f"{parsed_site_url.scheme}://{parsed_site_url.netloc}" if parsed_site_url.netloc else ""
+        headers = {
+            "Accept": "*/*",
+            "Content-Type": "application/json",
+            "Authorization": f"API-KEY {self.millionbot_config.api_key}",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome Safari/537.36"
+            ),
+        }
+        if origin:
+            headers["Origin"] = origin
+        if self.millionbot_config.site_url:
+            headers["Referer"] = self.millionbot_config.site_url
+        if self.chat_session_token:
+            headers["x-chat-session-token"] = self.chat_session_token
+        return headers
 
     def _initialize_conversation(self) -> None:
         """Initialize the conversation with the MillionBot API."""
         # Step 1: Create user
         user_payload = {
             "bot": self.millionbot_config.bot_id,
-            "language": "es-ES",
-            "platform": "Win32",
-            "country": "Spain",
-            "countryData": {"isoCode": "ES", "name": "Spain"},
-            "timezone": "Europe/Madrid",
-            "ip": "127.0.0.1",
+            "language": self.millionbot_config.user_language,
+            "platform": self.millionbot_config.platform,
+            "country": self.millionbot_config.country,
+            "countryData": {"isoCode": self.millionbot_config.country_iso_code, "name": self.millionbot_config.country},
+            "timezone": self.millionbot_config.timezone,
+            "ip": self.millionbot_config.ip,
         }
-        user_headers = {
-            "Content-Type": "application/json",
-            "Authorization": "API-KEY 60a3bee2e3987316fed3218f",
-        }
+        user_headers = self._browser_headers()
         user_url = self.config.get_full_url("users")
         timeout = self._resolve_timeout(self.config.timeout)
         user_response = self.session.post(
@@ -122,14 +204,11 @@ class MillionBot(Chatbot):
         conversation_payload = {
             "bot": self.millionbot_config.bot_id,
             "user": user_id,
-            "language": "es",
-            "integration": "web",
-            "gdpr": True,
+            "language": self.millionbot_config.language,
+            "integration": self.millionbot_config.integration,
+            "gdpr": self.millionbot_config.gdpr,
         }
-        conversation_headers = {
-            "Content-Type": "application/json",
-            "Authorization": "60a3bee2e3987316fed3218f",
-        }
+        conversation_headers = self._browser_headers()
         conversation_url = self.config.get_full_url("conversations")
         conversation_response = self.session.post(
             conversation_url,
@@ -139,9 +218,10 @@ class MillionBot(Chatbot):
         )
         conversation_response.raise_for_status()
         conversation_data = conversation_response.json()
+        self.chat_session_token = conversation_response.headers.get("x-chat-session-token", self.chat_session_token)
         self.conversation_id = conversation_data["conversation"]["_id"]
         self.user_id = user_id
-        self.session.headers.update(conversation_headers)
+        self.session.headers.update(self._browser_headers())
 
     def get_endpoints(self) -> dict[str, EndpointConfig]:
         """Return endpoint configurations for MillionBot chatbot."""
@@ -160,7 +240,8 @@ class MillionBot(Chatbot):
             "sender_type": "User",
             "sender": self.user_id,
             "bot": self.millionbot_config.bot_id,
-            "language": "es",
+            "language": self.millionbot_config.language,
+            "url": self.millionbot_config.site_url,
             "message": {"text": user_msg},
         }
 
