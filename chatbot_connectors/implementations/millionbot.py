@@ -104,7 +104,7 @@ class MillionBot(Chatbot):
         }
         user_headers = {
             "Content-Type": "application/json",
-            "Authorization": "API-KEY 60553d58c41f5dfa095b34b5",
+            "Authorization": "API-KEY 60a3bee2e3987316fed3218f",
         }
         user_url = self.config.get_full_url("users")
         timeout = self._resolve_timeout(self.config.timeout)
