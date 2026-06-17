@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.8.0 - 2026-06-17
+
+- Added a Comunidad de Madrid avatar chatbot connector using the public `api-avatar/new-message` widget endpoint.
+- Registered the new `comunidad_madrid` connector and documented its basic Python usage.
+- Ignored JetBrains `.idea/` project files and removed already tracked `.idea` files from version control.
 
 ## 0.7.2 - 2026-05-21
 
