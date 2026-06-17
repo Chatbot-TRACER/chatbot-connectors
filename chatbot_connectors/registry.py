@@ -2,6 +2,7 @@
 
 from chatbot_connectors.factory import ChatbotFactory
 from chatbot_connectors.implementations.botslovers import BotsloversChatbot
+from chatbot_connectors.implementations.comunidad_madrid import ComunidadMadridChatbot
 from chatbot_connectors.implementations.custom import CustomChatbot
 from chatbot_connectors.implementations.metro_madrid import MetroMadridChatbot
 from chatbot_connectors.implementations.millionbot import MillionBot
@@ -23,6 +24,12 @@ def register_all_chatbots() -> None:
         "metro_madrid",
         MetroMadridChatbot,
         description="Metro de Madrid virtual assistant connector",
+    )
+
+    ChatbotFactory.register_chatbot(
+        "comunidad_madrid",
+        ComunidadMadridChatbot,
+        description="Comunidad de Madrid avatar chatbot connector",
     )
 
     ChatbotFactory.register_chatbot(
