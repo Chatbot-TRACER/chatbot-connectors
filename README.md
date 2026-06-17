@@ -62,6 +62,19 @@ The library ships with several ready-to-use connectors. Each connector exposes t
   print(reply)
   ```
 
+### Comunidad de Madrid
+
+- Uses Comunidad de Madrid's public avatar widget API.
+- Auto-generates a `conversation_id`; pass one captured from the browser if the widget requires an existing session.
+- Example:
+  ```python
+  from chatbot_connectors.implementations.comunidad_madrid import ComunidadMadridChatbot
+
+  bot = ComunidadMadridChatbot()
+  success, reply = bot.execute_with_input("Hola")
+  print(reply)
+  ```
+
 ### MillionBot
 
 - Requires a `bot_id`. Known deployments:
