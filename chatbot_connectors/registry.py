@@ -4,6 +4,7 @@ from chatbot_connectors.factory import ChatbotFactory
 from chatbot_connectors.implementations.botslovers import BotsloversChatbot
 from chatbot_connectors.implementations.comunidad_madrid import ComunidadMadridChatbot
 from chatbot_connectors.implementations.custom import CustomChatbot
+from chatbot_connectors.implementations.langgraph import LangGraphChatbot
 from chatbot_connectors.implementations.metro_madrid import MetroMadridChatbot
 from chatbot_connectors.implementations.millionbot import MillionBot
 from chatbot_connectors.implementations.rasa import RasaChatbot
@@ -17,6 +18,12 @@ def register_all_chatbots() -> None:
     ChatbotFactory.register_chatbot("millionbot", MillionBot, description="MillionBot chatbot connector")
 
     ChatbotFactory.register_chatbot("taskyto", ChatbotTaskyto, description="Taskyto chatbot connector")
+
+    ChatbotFactory.register_chatbot(
+        "langgraph",
+        LangGraphChatbot,
+        description="LangGraph Agent Server connector with stateful threads",
+    )
 
     ChatbotFactory.register_chatbot("botslovers", BotsloversChatbot, description="Botslovers chatbot connector")
 
