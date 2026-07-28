@@ -94,6 +94,27 @@ The library ships with several ready-to-use connectors. Each connector exposes t
   print(reply)
   ```
 
+### LangGraph Agent Server
+
+- Connects directly to the Agent Server REST API; the optional LangGraph Python SDK is not required.
+- base_url is the URL used to start each bot, for example http://127.0.0.1:8101.
+- assistant_id must match the graph key in langgraph.json (chatbot in the example deployment).
+- The default response_path is messages. Change it when the graph exposes its answer in another state field.
+- For a remote LangSmith deployment, pass its API key through api_key. Local development servers normally require no key.
+- Each connector conversation is mapped to a LangGraph thread. Calling create_new_conversation() starts a fresh thread.
+
+~~~python
+from chatbot_connectors.implementations.langgraph import LangGraphChatbot
+
+bot = LangGraphChatbot(
+    base_url="http://127.0.0.1:8101",
+    assistant_id="chatbot",
+)
+bot.health_check()
+success, reply = bot.execute_with_input("Hola")
+print(reply)
+~~~
+
 ### RASA
 
 - Use the public REST webhook, e.g. `base_url="http://localhost:5005"`.
