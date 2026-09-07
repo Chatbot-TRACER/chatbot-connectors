@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.10.0 - 2026-09-07
+
+- Added a stateful connector for the common Codex and Claude Code `cli-agent-gateway` HTTP API.
+- Added optional bearer authentication, gateway health checks, long-running request timeouts, and SENSEI configuration documentation.
+- Added unit tests for response extraction, request construction, registration, and conversation resets.
+
 ## 0.9.0 - 2026-07-28
 
 - Added a LangGraph Agent Server connector with health checks, stateful thread creation, synchronous runs, and configurable response extraction.

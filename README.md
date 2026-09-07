@@ -115,6 +115,37 @@ success, reply = bot.execute_with_input("Hola")
 print(reply)
 ~~~
 
+### Codex and Claude Code CLI Agent Gateway
+
+- Connects to the shared HTTP API exposed by `cli-agent-gateway`.
+- Start the desired service in the gateway project with `npm.cmd run dev:codex`
+  or `npm.cmd run dev:claude` before running SENSEI.
+- Use `base_url="http://127.0.0.1:3000"` for the default Codex service or
+  `base_url="http://127.0.0.1:3001"` for the default Claude Code service.
+- If the gateway defines `SERVICE_API_KEY`, pass the same value as `api_key`.
+- Conversations are stateful. `create_new_conversation()` starts a fresh agent session.
+- Agent calls can be long-running, so the default request timeout is 660 seconds.
+
+```python
+from chatbot_connectors.implementations.cli_agent_gateway import CliAgentGatewayChatbot
+
+bot = CliAgentGatewayChatbot(base_url="http://127.0.0.1:3000")
+bot.health_check()
+success, reply = bot.execute_with_input("Hello")
+print(reply)
+```
+
+SENSEI can use the connector directly from its `run.yml`:
+
+```yaml
+technology: cli_agent_gateway
+connector_params: >
+  base_url=http://127.0.0.1:3000,timeout=660
+```
+
+Change the URL to port `3001` for Claude Code. When authentication is enabled,
+append `,api_key=<SERVICE_API_KEY>` to `connector_params`.
+
 ### RASA
 
 - Use the public REST webhook, e.g. `base_url="http://localhost:5005"`.

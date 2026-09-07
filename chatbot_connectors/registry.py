@@ -2,6 +2,7 @@
 
 from chatbot_connectors.factory import ChatbotFactory
 from chatbot_connectors.implementations.botslovers import BotsloversChatbot
+from chatbot_connectors.implementations.cli_agent_gateway import CliAgentGatewayChatbot
 from chatbot_connectors.implementations.comunidad_madrid import ComunidadMadridChatbot
 from chatbot_connectors.implementations.custom import CustomChatbot
 from chatbot_connectors.implementations.langgraph import LangGraphChatbot
@@ -23,6 +24,12 @@ def register_all_chatbots() -> None:
         "langgraph",
         LangGraphChatbot,
         description="LangGraph Agent Server connector with stateful threads",
+    )
+
+    ChatbotFactory.register_chatbot(
+        "cli_agent_gateway",
+        CliAgentGatewayChatbot,
+        description="Codex and Claude Code CLI agent gateway connector",
     )
 
     ChatbotFactory.register_chatbot("botslovers", BotsloversChatbot, description="Botslovers chatbot connector")
