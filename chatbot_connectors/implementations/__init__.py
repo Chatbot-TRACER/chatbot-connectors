@@ -1,6 +1,7 @@
 """Chatbot implementation modules."""
 
 from .botslovers import BotsloversChatbot
+from .cli_agent_gateway import CliAgentGatewayChatbot
 from .comunidad_madrid import ComunidadMadridChatbot
 from .custom import CustomChatbot
 from .langgraph import LangGraphChatbot
@@ -12,6 +13,7 @@ from .taskyto import ChatbotTaskyto
 __all__ = [
     "BotsloversChatbot",
     "ChatbotTaskyto",
+    "CliAgentGatewayChatbot",
     "ComunidadMadridChatbot",
     "CustomChatbot",
     "LangGraphChatbot",
